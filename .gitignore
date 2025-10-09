@@ -2,6 +2,12 @@
 .bmad-core/
 .bmad-*/
 
+# AI IDE configurations (local only - can be customized per user)
+.claude/
+.gemini/
+web-bundles/
+AGENTS.md
+
 # Dependencies
 node_modules/
 vendor/
