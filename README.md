@@ -164,10 +164,30 @@ vercel deploy
 
 ### Project Documentation
 
+- **[Product Requirements Document (PRD)](docs/prd.md)** - Complete PRD with 38 user stories across 4 epics
 - **[Project Brief](docs/brief.md)** - Comprehensive project documentation (11 sections covering problem, solution, architecture, risks, roadmap)
 - **[Executive Summary](docs/executive-summary.md)** - 1-page overview for leadership approval
 - **[Presentation Deck](docs/presentation.md)** - 23-slide stakeholder presentation
 - **[Brainstorming Results](docs/brainstorming-session-results.md)** - Research analyzing 45+ technical options
+
+### Frontend Development Guides ⚡ **NEW**
+
+- **[🚀 Getting Started - Frontend](docs/GETTING-STARTED-FRONTEND.md)** - Quick start guide: Choose your path (AI-First, Component-by-Component, or Manual)
+- **[📖 AI Prompts Usage Guide](docs/ai-prompts/README.md)** - Comprehensive guide: Which prompt to use, when, and how they relate to epics
+- **[🎯 Visual Index](docs/ai-prompts/INDEX.md)** - Quick visual reference with decision trees and scenario examples
+- **[🎨 Frontend Specification](docs/front-end-spec.md)** - Complete UX design specification with wireframes, user flows, and component library
+
+### AI Prompt Files (Ready to Use)
+
+Generate production-ready code with these AI prompts:
+
+- **[Master Prompt (All-in-One)](docs/ai-prompts/platform-ui-master-prompt.md)** - Generate entire platform in 1-2 days (7,500 lines)
+- **[Authentication System](docs/ai-prompts/01-authentication-system.md)** - Login, password reset, middleware (2-3 hours)
+- **[Dashboard Shell & Navigation](docs/ai-prompts/02-dashboard-shell-navigation.md)** - Header, sidebar, layout, iframe (3-4 hours)
+- **[User Management Admin](docs/ai-prompts/03-user-management-admin.md)** - Admin panel with CRUD operations (4-5 hours)
+- **[Responsive & Accessibility](docs/ai-prompts/04-responsive-accessibility.md)** - Mobile optimization, WCAG AA (3-4 hours)
+
+**Total:** 10,800+ lines of production-ready AI prompts with code examples, workflows, and epic mapping
 
 ### Key Sections
 
