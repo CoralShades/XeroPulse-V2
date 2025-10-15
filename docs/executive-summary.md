@@ -1,54 +1,79 @@
 # XeroPulse - Executive Summary
 
-**Project:** Automated Xero Dashboard Platform
-**Timeline:** 4 weeks (Launch: October 31, 2025)
+**Project:** Multi-System Financial Intelligence Platform for Professional Services Firms
+**Timeline:** 4 weeks MVP (Launch: October 31, 2025) | Month 2: Complete 8-Dashboard Suite
 **Budget:** $200/month maximum | **Projected Cost:** $15/month (92% under budget)
 **Team:** 1 Developer + 1 Tester
+**Scope:** **8 Specialized Dashboards** (3 MVP, 5 Post-MVP)
 
 ---
 
 ## The Opportunity
 
-Organizations using Xero face a critical gap between data collection and data utilization. Finance teams spend **5-10 hours weekly** extracting data, formatting Excel reports, and distributing static snapshots to stakeholders. Decision-makers wait **3-7 days** for insights, executives operate blind between monthly reviews, and only 3-5 power users access Xero directly—leaving 15+ team members dependent on intermediaries.
+**Professional services firms** (accounting, advisory, consulting) using **Xero + XPM/Workflow Max + Suntax** face a critical integration gap: financial data, work-in-progress tracking, service profitability, and tax compliance status live in separate systems. Finance teams spend **5-10 hours weekly** manually compiling cross-system reports, while partners and managers operate blind on:
+- **Unbilled WIP** locked in client engagements (cash flow risk)
+- **Service line profitability** (which services generate margin vs write-offs)
+- **Tax lodgment compliance** status across client portfolio
+- **Client recoverability** (which clients have high WIP but low collections)
 
-**XeroPulse eliminates this bottleneck** by automating the entire reporting workflow: Xero data syncs every 2 hours to custom dashboards accessible via secure web portal with role-based permissions.
+**XeroPulse eliminates this bottleneck** by integrating Xero (accounting), XPM (practice management), and Suntax (tax compliance) into **8 unified dashboards** with automated 2-hour data sync and role-based access.
 
 ---
 
 ## The Solution
 
-**Fully open-source technology stack** delivering enterprise BI capabilities at consumer pricing:
+**Fully open-source multi-system integration** delivering enterprise BI capabilities at consumer pricing:
 
-| Component | Technology | Cost |
-|-----------|------------|------|
-| Data Sync (ETL) | n8n (self-hosted) | $0 |
-| Database + Auth | Supabase (free tier) | $0 |
-| Dashboard Engine | Apache Superset | $0 |
-| Web Portal | Next.js (Vercel free tier) | $0 |
-| Hosting (VPS) | Hetzner/DigitalOcean | $10-20/month |
-| **Total** | | **~$15/month** |
+| Component | Technology | Data Sources | Cost |
+|-----------|------------|--------------|------|
+| Data Sync (ETL) | n8n (self-hosted) | Xero + XPM + Suntax APIs | $0 |
+| Database + Auth | Supabase (free tier) | PostgreSQL centralized storage | $0 |
+| Dashboard Engine | Apache Superset | 8 specialized dashboards | $0 |
+| Web Portal | Next.js (Vercel free tier) | Role-based access | $0 |
+| Hosting (VPS) | Hetzner/DigitalOcean | Docker containers | $10-20/month |
+| **Total** | | **3-system integration** | **~$15/month** |
 
 **vs. Commercial BI:** Power BI Embedded = $750/month minimum (98% cost reduction)
+**Key Differentiator:** Native integration with Xero + XPM + Suntax (not generic database connectors)
 
 ---
 
-## MVP Scope (4 Weeks)
+## MVP Scope (4 Weeks) - Xero-Only Dashboards
 
 **Week 1:** Infrastructure setup + technical validation (n8n, Superset, Xero API integration proof-of-concept)
-**Week 2:** ETL pipeline build + first dashboard prototype
-**Week 3:** Remaining 2 MVP dashboards + Next.js portal build
+**Week 2:** ETL pipeline build + Dashboard 1 prototype
+**Week 3:** Dashboards 2 & 7 + Next.js portal build
 **Week 4:** UAT with 20 users + training + production launch
 
-**MVP Deliverables:**
-- ✅ 3 dashboards (specific requirements TBD in Week 1 stakeholder workshop)
+**MVP Deliverables (Xero Integration Only):**
+- ✅ **Dashboard 1: Income vs Expenses** - Weekly cash flow with 8-week rolling averages
+- ✅ **Dashboard 2: Monthly Invoicing to Budget** - Actual vs Budget tracking
+- ✅ **Dashboard 7: Debtors/AR Aging** - Collections monitoring with DSO trends
 - ✅ 20 users onboarded with role-based access (executives, managers, staff)
 - ✅ Full authentication system (user management, password policies, session security)
 - ✅ 2-hour automated Xero data sync (95%+ reliability)
 - ✅ Sub-60-second insight access (replace 3-7 day report turnaround)
 
-**Post-MVP (Month 2-3):**
-- Remaining 7 dashboards (requirements workshop Month 2)
+**Complete 8-Dashboard Suite:**
+
+| # | Dashboard | Data Source | Priority | Visual Mockups |
+|---|-----------|-------------|----------|----------------|
+| 1 | Income vs Expenses | Xero | MVP | ✅ `Dashboard-1-*.png` (7 images) |
+| 2 | Monthly Invoicing to Budget | Xero | MVP | ✅ `Dashboard-2-*.png` (1 image) |
+| 3 | YTD/MTD View | Xero | Post-MVP | ✅ `Dashboard-3-*.png` (4 images) |
+| 4 | Work In Progress by Team | XPM | Post-MVP | ✅ `Dashboard-4-*.png` (6 images) |
+| 5 | ATO Lodgment Status | Suntax | Post-MVP | ✅ `Dashboard-5-*.png` (1 image) |
+| 6 | Services Analysis | XPM | Post-MVP | ✅ `Dashboard-6-*.png` (1 image) |
+| 7 | Debtors/AR Aging | Xero | MVP | ✅ `Dashboard-7-*.png` (1 image) |
+| 8 | Client Recoverability | XPM | Post-MVP | ✅ `Dashboard-8-*.png` (3 images) |
+
+**Post-MVP (Month 2):**
+- XPM/Workflow Max integration (Dashboards 4, 6, 8)
+- Suntax integration (Dashboard 5 - API confirmation required)
+- Dashboard 3 (extends Dashboard 2, Xero-only)
 - Advanced features: mobile optimization, data export, real-time sync
+
+**Visual Reference:** 22 dashboard mockup images in `docs/dashboard_images/word/media/`
 
 ---
 
@@ -70,14 +95,18 @@ Organizations using Xero face a critical gap between data collection and data ut
 
 ## Key Risks & Mitigation
 
-| Risk | Impact | Mitigation |
-|------|--------|------------|
-| **Learning curve delays timeline** | High | Week 1 rapid prototyping; fallback to simpler tools (Metabase) if Superset too complex |
-| **Dashboard requirements unclear** | Medium | Structured workshop Week 1; build prototype for early feedback; change control process |
-| **Supabase 500MB limit exceeded** | Low-Med | Monitor storage; Pro upgrade ($25/month) available within budget |
-| **VPS performance insufficient** | Medium | Start with 4GB RAM; upgrade to 8GB ($20-40/month) if needed, still under budget |
+| Risk | Impact | Mitigation | Status |
+|------|--------|------------|--------|
+| **Learning curve delays timeline** | High | Week 1 rapid prototyping; fallback to simpler tools (Metabase) if Superset too complex | Active |
+| **Dashboard requirements unclear** | Medium | **RESOLVED:** Complete mockups exist (22 images), all 8 dashboards fully specified | ✅ Closed |
+| **XPM API integration complexity** | Med-High | Defer XPM dashboards to Month 2 (MVP uses Xero-only); validate XPM APIs Week 1 | Active |
+| **Suntax API availability unknown** | Medium | Dashboard 5 deferred to Month 2 pending API confirmation; mockup exists | Active |
+| **Supabase 500MB limit exceeded** | Low-Med | Monitor storage; Pro upgrade ($25/month) available within budget | Active |
+| **VPS performance insufficient** | Medium | Start with 4GB RAM; upgrade to 8GB ($20-40/month) if needed, still under budget | Active |
 
-**Total Risk Exposure:** Manageable within budget/timeline constraints; all risks have documented mitigation strategies.
+**Total Risk Exposure:** Manageable within budget/timeline constraints; **dashboard requirements risk eliminated** (complete specifications available).
+
+**Key Discovery:** All 8 dashboards have visual mockups and detailed specifications, significantly reducing requirements risk versus original "TBD" assumption.
 
 ---
 
@@ -85,13 +114,15 @@ Organizations using Xero face a critical gap between data collection and data ut
 
 **Day 1 Stakeholder Meeting Must Resolve:**
 
-1. **Dashboard Priority:** Which 3 dashboards for MVP? (Finance team + executives to identify highest-impact reports)
+1. **Dashboard Priority:** ✅ **RESOLVED** - MVP = Dashboards 1, 2, 7 (Xero-only); Post-MVP = Dashboards 3, 4, 5, 6, 8 (XPM/Suntax)
 2. **User List:** Exact 20 users with names, emails, role assignments (HR/admin to provide)
 3. **Timeline Stakes:** Hard deadline (business consequence if missed) or soft deadline (preference but flexible)?
 4. **Approval Authority:** Who approves dashboard designs before development? (Single decision-maker vs. committee?)
 5. **Data Latency:** Is 2-hour sync sufficient, or do decisions require hourly/real-time updates?
+6. **XPM/Suntax API Access:** ✅ **NEW** - Confirm XPM API credentials and Suntax API availability for Month 2 dashboards
+7. **Service Taxonomy:** ✅ **NEW** - Provide mapping of XPM task codes/categories to service types (EOFY, SMSF, Bookkeeping, ITR, BAS, Advisory, etc.)
 
-**Without these answers by Day 2, project timeline at risk.**
+**Status:** Dashboard requirements fully documented (22 mockup images analyzed); focus shifts to user access and API credentials.
 
 ---
 

@@ -2,13 +2,20 @@
 
 ## Executive Summary
 
-XeroPulse is a secure, role-based dashboard platform that transforms raw Xero accounting data into actionable insights for 20 users across an organization. The platform automatically syncs data from Xero every 2 hours, presenting 10 custom financial dashboards through a modern web portal with granular access control.
+XeroPulse is a secure, role-based dashboard platform that transforms financial and operational data from **Xero (accounting) and XPM/Workflow Max (practice management)** into actionable insights for professional services firms. The platform automatically syncs data every 2 hours, presenting **8 specialized dashboards** through a modern web portal with granular access control for teams managing client engagements, tax compliance, and financial performance.
 
-**Core Problem Solved:** Organizations using Xero lack customizable, role-specific financial dashboards that present the right data to the right people without manual report generation or overwhelming users with irrelevant information.
+**Core Problem Solved:** Professional services firms (accounting, advisory, consulting) using Xero + XPM lack integrated, role-specific dashboards that unify financial accounting, work-in-progress tracking, service line profitability, and tax compliance status—forcing teams to manually compile data across multiple systems.
 
-**Target Market:** Small to medium businesses (SMBs) and accounting firms using Xero who need multi-user dashboard access with role-based permissions, serving teams of 10-50 people requiring real-time financial visibility.
+**Target Market:** Accounting and professional services firms using Xero (accounting) + XPM/Workflow Max (practice management) + Suntax (tax compliance), serving 10-50 staff who need real-time visibility into client work, unbilled revenue, service profitability, and compliance obligations.
 
-**Key Value Proposition:** Automated financial intelligence at 89-94% below traditional BI platform costs (~$15/month vs. $750+ for Power BI Embedded), delivered in 4 weeks with fully open-source technology stack ensuring no vendor lock-in.
+**Key Value Proposition:** Automated multi-system financial intelligence at 89-94% below traditional BI platform costs (~$15/month vs. $750+ for Power BI Embedded), with **8 purpose-built dashboards** specifically designed for professional services operations, delivered in 4 weeks with fully open-source technology stack ensuring no vendor lock-in.
+
+**Discovered Context:** Based on comprehensive requirements analysis of dashboard mockups and specifications document, XeroPulse addresses the unique needs of professional services firms managing:
+- Client billing and WIP (Work In Progress) tracking across teams
+- Service line profitability analysis (EOFY, SMSF, Bookkeeping, ITR, BAS, Advisory, etc.)
+- Tax lodgment compliance status (ITR, TRT, CTR, SMSF, PTR)
+- Client recoverability and accounts receivable aging
+- Budget performance and cash flow monitoring
 
 ---
 
@@ -55,16 +62,22 @@ XeroPulse delivers automated financial intelligence through a fully open-source 
 
 **Core Concept & Approach:**
 
-The solution follows a proven ETL (Extract, Transform, Load) architecture optimized for cost and simplicity:
+The solution follows a proven ETL (Extract, Transform, Load) architecture optimized for cost and simplicity, with **multi-system integration** capabilities:
 
-1. **Automated Data Sync:** n8n workflow automation connects to Xero API every 2 hours, extracting invoices, contacts, transactions, payments, and account data
-2. **Centralized Storage:** Supabase PostgreSQL database stores transformed Xero data (500MB free tier sufficient for 20 users)
-3. **Business Intelligence Layer:** Apache Superset generates 10 custom financial dashboards with advanced analytics (KPIs, trend analysis, cohort reports)
+1. **Automated Data Sync:** n8n workflow automation connects to multiple data sources every 2 hours:
+   - **Xero API:** Financial data (invoices, contacts, transactions, payments, accounts, budgets)
+   - **XPM/Workflow Max API:** Practice management data (jobs, time entries, costs, billable rates, WIP)
+   - **Suntax API (pending confirmation):** Tax compliance data (lodgment status, client types)
+2. **Centralized Storage:** Supabase PostgreSQL database stores transformed data from all sources (500MB free tier, upgradeable to Pro if needed)
+3. **Business Intelligence Layer:** Apache Superset generates 8 specialized dashboards with advanced analytics (KPIs, trend analysis, WIP tracking, profitability metrics)
 4. **User Portal:** Next.js web application provides secure login, role-based dashboard access, and professional branding
 
 **Technology Stack:**
-- **Data Source:** Xero API (OAuth2 authentication)
-- **ETL Pipeline:** n8n (self-hosted, native Xero integration)
+- **Data Sources:**
+  - Xero API (OAuth2 authentication) - Financial/accounting data
+  - XPM/Workflow Max API (OAuth2/API key) - Practice management data
+  - Suntax API (TBD) - Tax compliance data
+- **ETL Pipeline:** n8n (self-hosted, native Xero integration + HTTP requests for XPM/Suntax)
 - **Database + Auth:** Supabase (PostgreSQL + authentication)
 - **Dashboard Tool:** Apache Superset (self-hosted BI platform)
 - **Web Portal:** Next.js 14 (modern React framework)
@@ -265,12 +278,35 @@ The MVP focuses on delivering core automation and dashboard functionality within
   - Basic monitoring and logging for services
   - **Rationale:** Self-hosted infrastructure keeps costs minimal and provides full control
 
-- **Initial 3 MVP Dashboards**
-  - **Dashboard 1: [TBD - Executive/Strategic Focus]**
-  - **Dashboard 2: [TBD - Operational/Cash Management Focus]**
-  - **Dashboard 3: [TBD - Revenue/Customer Focus]**
-  - **Note:** Specific dashboard requirements, names, and KPIs to be defined during project kickoff with stakeholders
-  - **Rationale:** 3 dashboards validate the full workflow while staying achievable in 4 weeks; specific content determined based on highest-priority business questions
+- **Initial 3 MVP Dashboards (Priority 1 - Weeks 2-4)**
+  - **Dashboard 1: Income vs Expenses** - Weekly income trends with 8-week rolling averages for wages and expenses (Xero: Payments API + P&L Report)
+  - **Dashboard 2: Monthly Invoicing to Budget** - Actual vs Budget comparison by month (Xero: Budget Summary + Payments APIs)
+  - **Dashboard 7: Debtors/AR Aging** - Accounts receivable aging buckets (<30, 31-60, 61-90, 90+ days) with DSO trends and top debtors (Xero: Invoices + Contacts APIs)
+  - **Rationale:** These 3 dashboards address immediate cash flow visibility needs using Xero-only data (no XPM dependency), validating full technical stack while delivering high-value financial insights
+
+**Comprehensive Dashboard Suite (8 Total)**
+
+Based on detailed requirements analysis and visual mockups, the complete XeroPulse platform will deliver:
+
+| # | Dashboard Name | Purpose | Data Source(s) | Complexity | Priority |
+|---|----------------|---------|----------------|------------|----------|
+| 1 | Income vs Expenses | Cash flow monitoring with trend analysis (8-week rolling averages) | Xero (Payments, P&L) | Medium | MVP |
+| 2 | Monthly Invoicing to Budget | Performance vs targets tracking | Xero (Budget, Invoices, Payments) | Low-Med | MVP |
+| 3 | YTD/MTD View | Time-aggregated performance (toggle widget) | Xero (Budget, Invoices) | Low | Post-MVP |
+| 4 | Work In Progress by Team | Unbilled WIP across service teams with aging breakdown | XPM (Jobs, Time, Costs, Invoices) | High | Post-MVP |
+| 5 | ATO Lodgment Status | Tax compliance tracking by client type (ITR, TRT, CTR, SMSF, PTR) | Suntax API (TBD) | Unknown | Post-MVP |
+| 6 | Services Analysis | Service line profitability (Time Added, Invoiced, Write-Ups, Avg Rate) | XPM (Time, Invoices, Tasks) | High | Post-MVP |
+| 7 | Debtors/AR Aging | Collections monitoring with aging buckets and DSO trends | Xero (Invoices, Contacts) | Medium | MVP |
+| 8 | Client Recoverability | Client-level WIP and profitability tracking | XPM (Time, Costs, Invoices, Jobs) | Med-High | Post-MVP |
+
+**Visual Reference:** All dashboards have complete mockups with sample data located in `docs/dashboard_images/word/media/` (22 images total, organized by dashboard number)
+
+**Key Implementation Notes:**
+- **MVP Strategy:** Dashboards 1, 2, 7 are Xero-only (simpler integration), proving architecture before adding XPM complexity
+- **XPM Integration Required:** Dashboards 4, 6, 8 depend on Workflow Max/XPM practice management data (billable time, WIP calculations, charge rates)
+- **Suntax Blocker:** Dashboard 5 requires Suntax API confirmation (mockup exists but API availability unknown)
+- **Dashboard 3 Dependency:** Extends Dashboard 2 with alternate view format (low additional effort)
+- **Service Taxonomy:** Dashboard 6 requires mapping XPM tasks/categories to service types (EOFY, SMSF, Bookkeeping, ITR, BAS, Advisory, ASIC, FBT, etc.)
 
 ### Out of Scope for MVP
 
@@ -278,12 +314,15 @@ The MVP focuses on delivering core automation and dashboard functionality within
 - **Custom dashboard builder UI:** Users cannot create their own dashboards within portal (team builds all dashboards in Superset directly)
 - **Real-time data sync:** Webhooks or sub-2-hour sync frequency (2-hour scheduled sync sufficient for MVP)
 - **Mobile-optimized views:** Native mobile app or mobile-specific dashboard layouts (desktop/tablet only for MVP)
-- **Multi-tenant architecture:** Supporting multiple Xero organizations (single organization only)
+- **Multi-tenant architecture:** Supporting multiple Xero/XPM organizations (single organization only)
 - **Advanced analytics features:** Predictive analytics, AI-powered insights, anomaly detection (descriptive analytics only)
-- **Remaining 7 dashboards:** Deferred to post-MVP (Month 2) to de-risk timeline
-  - **Dashboard 4-10:** [TBD - Specific requirements to be defined based on user roles and business priorities]
-  - Potential categories: Budget tracking, departmental analytics, expense analysis, customer insights, project profitability, inventory/COGS, payroll (if applicable)
-  - Requirements gathering session needed to prioritize and name remaining dashboards
+- **XPM/Workflow Max Integration:** Dashboards 3, 4, 5, 6, 8 deferred to post-MVP (Month 2) to de-risk timeline
+  - **Dashboard 3:** YTD/MTD View (extends Dashboard 2, Xero-only)
+  - **Dashboard 4:** Work In Progress by Team (XPM: requires Jobs, Time, Costs, Invoices APIs + WIP calculation logic)
+  - **Dashboard 5:** ATO Lodgment Status (Suntax: API availability must be confirmed, visual mockup exists)
+  - **Dashboard 6:** Services Analysis (XPM: requires Time, Invoices, Tasks APIs + service taxonomy mapping)
+  - **Dashboard 8:** Client Recoverability (XPM: client-level WIP tracking similar to Dashboard 4)
+  - **Rationale:** MVP proves Xero integration first (Dashboards 1, 2, 7); XPM integration added Month 2 after validating architecture
 - **Data export functionality:** PDF/Excel export from dashboards (view-only for MVP)
 - **Email alerts/notifications:** Automated alerts for KPI thresholds or anomalies (manual monitoring only)
 - **Advanced security features:** SSO/SAML integration, IP whitelisting, two-factor authentication (basic email/password sufficient initially)
@@ -328,17 +367,33 @@ Beyond the initial MVP deployment, XeroPulse has a clear roadmap for evolution f
 
 ### Phase 2 Features (Months 2-6)
 
-**Complete Dashboard Suite (Month 2)**
-- **Dashboard Requirements Definition Workshop:** Conduct stakeholder sessions to identify specific dashboard needs, KPIs, and visualization requirements
-- Build remaining 7 dashboards to reach full 10-dashboard commitment based on prioritized requirements
-- Potential dashboard categories (to be confirmed):
-  - Budget tracking and variance analysis
-  - Departmental/cost center analytics
-  - Expense analysis and categorization
-  - Customer insights and behavior
-  - Project or product profitability
-  - Inventory/COGS (if applicable)
-  - Payroll/workforce analytics (if applicable, requires additional access controls)
+**Complete Dashboard Suite (Month 2) - Build Remaining 5 Dashboards**
+
+**XPM Integration & Advanced Dashboards:**
+- **Dashboard 3: YTD/MTD View** (Xero-only, extends Dashboard 2)
+  - Toggle widget for month-to-date vs year-to-date budget performance
+  - Minimal complexity, fast implementation
+- **Dashboard 4: Work In Progress by Team** (XPM integration, high complexity)
+  - WIP by service team (Accounting, Bookkeeping, SMSF, Support Hub) with aging breakdown
+  - Requires: XPM Jobs, Time, Costs, Invoices APIs
+  - WIP calculation: (Time Value + Billable Costs) - Progress Invoices
+- **Dashboard 5: ATO Lodgment Status** (Suntax integration, complexity TBD)
+  - Tax compliance tracking by client type (ITR, TRT, CTR, SMSF, PTR)
+  - Lodgment progress gauge, workflow state breakdown, client type performance
+  - **Prerequisite:** Confirm Suntax API availability (mockup exists, API unknown)
+- **Dashboard 6: Services Analysis** (XPM integration, high complexity)
+  - Service line profitability: Time Added $, Invoiced, Net Write-Ups, Time Revenue, Avg Charge Rate
+  - Requires: XPM Time, Invoices, Tasks/Categories APIs + service taxonomy mapping
+  - Service categories: EOFY, SMSF, Bookkeeping, ITR, BAS, Advisory, ASIC, FBT, Client Service, Tax Planning
+- **Dashboard 8: Client Recoverability** (XPM integration, medium-high complexity)
+  - Client-level WIP tracking: Time $, Disbursements, Interims, Net WIP
+  - Toggle between "by Staff" and "by Client" views
+
+**Technical Prerequisites:**
+- **n8n XPM Workflow:** Build HTTP request workflows for XPM Practice Manager 3.1 API endpoints
+- **Service Taxonomy Configuration:** Map XPM task codes/categories to dashboard service types
+- **WIP Calculation Logic:** Implement business rules for WIP valuation, interim handling, write-offs
+- **Suntax API Investigation:** Confirm API availability, authentication method, data structure
 
 **Enhanced Authentication & User Management (Month 1-2)**
 - User management admin panel (add/remove users, assign roles, manage permissions)
