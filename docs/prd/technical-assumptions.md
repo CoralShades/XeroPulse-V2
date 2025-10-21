@@ -2,193 +2,177 @@
 
 ### Repository Structure: Monorepo
 
-**Decision:** Single Git repository containing all XeroPulse components.
+The project will use a monorepo structure with Next.js App Router, containing the main application, API routes, and supporting configurations in a single repository for streamlined development and deployment.
 
-**Structure:**
-```
-xeropulse/
-├── apps/
-│   ├── web/                 # Next.js web portal
-│   ├── n8n-workflows/       # n8n workflow JSON exports (version control)
-│   ├── superset-config/     # Superset dashboard exports, configuration
-├── docs/                    # Architecture diagrams, deployment guides, user docs
-├── infrastructure/          # Docker Compose files, deployment scripts, VPS setup
-├── .bmad-core/             # BMAD agent configurations and templates
-└── README.md
-```
+**Monorepo Tool:** npm workspaces (lightweight, Next.js native)
 
-**Rationale:**
-- **Team coordination:** Simpler for 1-2 developer team—all XeroPulse code in one place
-- **Version control:** Changes to portal, workflows, and dashboards tracked together (easier rollbacks)
-- **Deployment sync:** Infrastructure-as-code ensures reproducible deployments across environments
-- **Documentation proximity:** Architecture docs live alongside code they describe
+**Package Organization:**
+- Core Next.js app contains frontend, API routes, and shared utilities
+- Separate repositories for PydanticAI service and n8n workflows
+- Shared TypeScript types package for API contracts between services
 
-**Alternative Considered:** Polyrepo (separate repos for web, workflows, infrastructure)
-- **Rejected because:** Adds coordination overhead for small team; cross-component changes require multiple PRs
+### Service Architecture: Hybrid (Frontend Monolith + Microservice AI Backend)
 
-### Service Architecture
+- **Frontend**: Next.js 14+ application serving as the primary user interface and dashboard portal
+- **AI Backend**: Separate PydanticAI FastAPI microservice for conversational analytics (deployed as NFR)
+- **Database & Auth**: Supabase PostgreSQL with Row Level Security and authentication (AU region for data residency)
+- **Cache Layer**: Redis (Upstash) for session storage and query result caching
+- **ETL Pipeline**: n8n cloud instance for primary data extraction and transformation workflows
+- **BI Engine**: Metabase for embedded dashboard generation and data visualization
 
-**Decision:** Distributed services architecture with self-hosted components coordinated via Docker Compose on single VPS.
+**Platform & Infrastructure:**
+- **Primary Deployment:** Vercel (Next.js optimization, global edge network)
+- **Database & Auth:** Supabase (PostgreSQL with RLS, Auth, Real-time subscriptions)
+- **Region:** AWS Asia-Pacific (Sydney) for Australian financial compliance
+- **CDN:** Global edge locations via Vercel network
 
-**Architecture Pattern:**
-```
-┌─────────────┐      OAuth2       ┌──────────┐
-│  Xero API   │◄─────────────────►│   n8n    │ (VPS)
-│  XPM API    │                   └────┬─────┘
-│ Suntax API  │                        │ ETL (every 2hrs)
-└─────────────┘                        ▼
-┌─────────────┐                   ┌──────────┐
-│   Users     │◄──────Auth────────│ Supabase │ (Cloud)
-│ (Browsers)  │                   │ (DB+Auth)│
-└──────┬──────┘                   └────┬─────┘
-       │                               │
-       │ HTTPS                         │ SQL Queries
-       ▼                               ▼
-┌─────────────┐    iframe embed   ┌──────────┐
-│  Next.js    │◄─────────────────►│ Superset │ (VPS)
-│   Portal    │  (Vercel Cloud)   │Dashboard │
-└─────────────┘                   └──────────┘
-```
+### Testing Requirements: Comprehensive Multi-Layer Testing
 
-**Components:**
-- **ETL Layer:** n8n (self-hosted on VPS) - Workflow automation, API orchestration
-- **Data Layer:** Supabase (cloud managed) - PostgreSQL database + authentication
-- **BI Layer:** Apache Superset (self-hosted on VPS) - Dashboard engine
-- **Presentation Layer:** Next.js 15 (Vercel cloud) - User-facing web portal
+- **Unit Testing**: Jest + React Testing Library for component and utility function testing
+- **Integration Testing**: API route testing with Next.js test utilities and Supabase client mocking
+- **E2E Testing**: Playwright for critical user journeys (authentication, dashboard access, Xero OAuth)
+- **AI Testing**: Separate test suite for PydanticAI conversational interface validation
 
-**Rationale:**
-- **Hybrid cloud approach:** Balances cost (self-hosted n8n/Superset) with reliability (managed Supabase/Vercel)
-- **Not microservices:** Single VPS runs multiple services via Docker Compose (sufficient for 20 users, simpler ops)
-- **Not serverless:** ETL requires stateful workflows, long-running syncs incompatible with FaaS time limits
-- **Scalability path:** Each component upgrades independently (Supabase → Pro, larger VPS, Vercel → Pro) without refactoring
+### Frontend Technology Stack
 
-**Technology Stack Details:**
+- **Framework**: Next.js 14+ with App Router for modern React development patterns
+- **UI Components**:
+  - **Primary**: AG-UI enterprise components for data-intensive dashboard interfaces
+  - **Base**: Shadcn v4 components with MCP integration for consistent design system
+- **Styling**: Tailwind CSS with AG-UI's utility extensions and custom design tokens
+- **State Management**: React Server Components + client-side React Context for complex state
+- **Type Safety**: TypeScript 5+ with strict configuration for enhanced developer experience
 
-**Frontend:**
-- **Next.js 15** (App Router, React 19, Server Components)
-  - *Rationale:* Latest stable version (12+ months old by October 2025 project start), better performance, longer support window, improved caching and async APIs
-- **Tailwind CSS** (utility-first styling)
-- **shadcn/ui** (accessible component library, Next.js 15 compatible)
-- **Supabase Auth Client** (authentication integration)
+### Backend & Data Architecture
 
-**Backend/Database:**
-- **Supabase** (PostgreSQL 14+ with Auth service)
-- **n8n** (workflow automation, self-hosted)
-- **Apache Superset** (BI platform, self-hosted)
+- **Database**: Supabase PostgreSQL with Row Level Security (RLS) for role-based data access
+  - Instance: Australia Pacific (Sydney) region for data residency
+  - Tier: Supabase Pro with auto-scaling (4 vCPU, 8GB RAM baseline)
+  - Connection pooling via PgBouncer (transaction pooling mode)
+- **Authentication**: Supabase Auth with OAuth providers and session management
+- **API Layer**:
+  - **Primary**: tRPC 10+ for type-safe API procedures with end-to-end TypeScript
+  - **Secondary**: Next.js API Routes for REST endpoints and external webhooks
+  - **Serverless Functions**: Vercel edge functions with configurable timeouts and memory
+- **Cache**: Redis (Upstash) for session storage, API response caching, and query result caching
+- **Real-time Features**: Supabase Realtime for live dashboard updates and collaboration features
 
-**Infrastructure:**
-- **VPS:** Hetzner Cloud (€4.51/month = ~$7.50 AUD, 4GB RAM minimum) or DigitalOcean ($12/month)
-  - *Alternative Considered:* **GCP (Google Cloud Platform)** - Rejected due to 3-6x higher cost ($45-65/month vs $10-20/month), see "Cloud Provider Comparison" below
-- **Container Orchestration:** Docker Compose (n8n + Superset on single VPS)
-- **CDN/DNS:** Cloudflare (free tier)
-- **SSL/TLS:** Let's Encrypt (free automated certificates)
-- **Next.js Hosting:** Vercel free tier (100GB bandwidth/month, 100 serverless invocations/day)
+### Conversational AI Integration (NFR Implementation)
 
-**API Integrations:**
-- **Xero API:** OAuth2 authentication, invoices, contacts, transactions, payments, accounts, budgets
-- **XPM/Workflow Max API:** OAuth2/API key, jobs, time entries, costs, billable rates, WIP
-- **Suntax API:** TBD (pending API availability confirmation)
+- **AI Service**: PydanticAI FastAPI microservice deployed separately from main application
+- **Communication**: REST API integration between Next.js frontend and PydanticAI backend
+- **Chat Interface**:
+  - **Primary**: Self-hosted CopilotKit for conversational UI components
+  - **Fallback**: Custom chat implementation if CopilotKit doesn't meet functionality requirements
+- **Data Privacy**: AI queries processed through internal infrastructure, no external AI service dependencies
 
-### Testing Requirements
+### ETL & Data Pipeline
 
-**Decision:** Unit + Integration testing with manual UAT; E2E testing deferred to post-MVP.
+- **Primary ETL**: n8n workflows for Xero API data extraction and transformation
+- **Scheduling**: n8n's built-in cron scheduling for automated daily data pipeline execution
+- **Data Flow**: Xero API → n8n transformation → Supabase PostgreSQL → Metabase dashboards
+- **Monitoring**: n8n workflow execution logs and Supabase database monitoring
 
-**Testing Strategy:**
+### Business Intelligence & Visualization
 
-**Unit Testing:**
-- **Next.js components:** React Testing Library + Jest for critical auth/navigation components
-- **API routes:** Jest for Next.js API endpoint testing (if custom endpoints created)
-- **Scope:** Focus on authentication flows, role-based rendering logic, error boundaries
-- **Coverage target:** 60%+ for custom code (excluding third-party components)
+- **BI Platform**: Metabase for embedded dashboard creation and data visualization
+- **Dashboard Embedding**: Metabase iframe integration with authentication passthrough
+- **Data Sources**: Direct connection from Metabase to Supabase PostgreSQL database
+- **Role-Based Access**: Metabase permissions aligned with Supabase RLS policies
 
-**Integration Testing:**
-- **ETL workflows:** Manual testing of n8n workflows in Week 1-2 (Xero → Supabase data flow)
-- **Dashboard rendering:** Manual verification that Superset queries return correct data
-- **Authentication flow:** Test Supabase Auth → Next.js → Superset token passing
-- **No automated integration tests for MVP** (time constraint; manual testing sufficient for 20-user internal deployment)
+### External Integrations
 
-**User Acceptance Testing (Week 4):**
-- **Participants:** 5+ representative users (executives, managers, staff roles)
-- **Scenarios:** Login, navigate dashboards, verify data accuracy, test role permissions
-- **Format:** Live sessions with test script, feedback collection
-- **Success criteria:** 80%+ users rate dashboards "useful" or "very useful"
+- **Primary Data Sources**:
+  - Xero API (OAuth 2.0) for financial data extraction
+  - Workflow Max / XPM (V2 API when available) for project management data
+- **OAuth Management**: Server-side token handling through Next.js API routes with secure storage
+- **API Rate Limiting**: Implemented at application level to respect external service limits
 
-**Manual Testing Conveniences:**
-- **Test users:** Pre-seeded Supabase database with test accounts for each role
-- **Test data:** Sample Xero data loaded for dashboard development (Week 2)
-- **Docker dev environment:** Local Docker Compose setup for n8n/Superset testing before VPS deployment
+### Deployment & Infrastructure
 
-**E2E Testing (Post-MVP):**
-- **Deferred to Month 2:** Playwright or Cypress for end-to-end user flows
-- **Rationale:** 4-week timeline prioritizes functional delivery over test automation; internal deployment reduces risk of skipping E2E initially
+- **Frontend Hosting**: Vercel for Next.js application deployment
+  - Region: Sydney (syd1) for Australian compliance
+  - Edge functions with 30-60s timeouts for API routes
+  - CDN distribution for global performance
+  - Automatic HTTPS with SSL certificates
+- **AI Backend Hosting**: AWS Lambda (Serverless) for PydanticAI FastAPI service
+  - Region: Australia Pacific (Sydney)
+  - Runtime: Python 3.11 on ARM64 (Graviton2)
+  - Memory: 1024 MB with 30s timeout
+  - Auto-scaling: 2 provisioned instances, up to 50 concurrent
+- **Database**: Supabase managed PostgreSQL with automatic backups
+  - Point-in-time recovery (7 days)
+  - Automated daily backups
+  - Database monitoring and performance tracking
+- **ETL Infrastructure**: n8n Cloud Pro
+  - Region: Australia Southeast
+  - Memory: 4GB, CPU: 2 vCPU
+  - Workflow execution monitoring and logging
+- **BI Infrastructure**: Metabase (Docker deployment)
+  - Self-hosted on VPS or containerized service
+  - Integrated with Supabase PostgreSQL
+  - JWT-based dashboard embedding with security
+- **Monitoring & Logging**:
+  - Application: Vercel Analytics + Sentry for error tracking
+  - Database: Supabase built-in monitoring + custom queries
+  - Logs: Pino + Better Stack for structured logging
+- **CI/CD**: GitHub Actions for automated testing and deployment
+  - Automated testing on pull requests
+  - Preview deployments on staging branch
+  - Production deployments on main branch
 
-**Monitoring/Observability:**
-- **n8n execution logs:** Track sync success/failure rates
-- **Superset query logs:** Monitor dashboard load performance
-- **Vercel analytics:** Track portal page load times
-- **VPS monitoring:** CPU/RAM/disk usage alerts (Docker stats, simple monitoring script)
+### Development & Quality Assurance
 
-### Additional Technical Assumptions and Requests
+- **Development Environment**: Local development with Docker Compose for service orchestration
+- **Code Quality**: ESLint + Prettier for code formatting, Husky for pre-commit hooks
+- **Type Checking**: TypeScript strict mode with path mapping and barrel exports
+- **Performance Monitoring**: Next.js built-in analytics and Core Web Vitals tracking
+- **Security**: OWASP guidelines implementation, dependency scanning, and security headers
 
-**Database Design:**
-- **Schema:** Normalized tables mirroring Xero/XPM entities (invoices, line_items, contacts, jobs, time_entries, etc.)
-- **Indexing:** Primary keys + indexes on frequently filtered fields (contact_id, date ranges, status fields)
-- **Data retention:** All historical data preserved (no automatic purging); manual cleanup if approaching 500MB Supabase limit
-- **Migrations:** Supabase migration files version-controlled in monorepo
+### Data Governance & Privacy
 
-**Security & Compliance:**
-- **Data encryption at rest:** Supabase AES-256 (managed)
-- **Data encryption in transit:** HTTPS/TLS for all communications (Let's Encrypt)
-- **Credential management:** Environment variables (never committed to Git), n8n credential encryption
-- **Row-Level Security:** Supabase RLS policies for database access control (if needed beyond app-level auth)
-- **Password hashing:** bcrypt via Supabase Auth
-- **Session management:** JWT tokens with configurable expiration
-- **Data residency:** Supabase region selection (AU/NZ preferred for Australian data sovereignty if required)
-- **Backup strategy:** Supabase daily automated backups (7-day retention on free tier), weekly VPS snapshots
+- **Data Protection**: All financial data processed and stored within controlled infrastructure
+- **Access Control**: Multi-layered security with Supabase RLS, role-based UI rendering, and API authentication
+- **Audit Logging**: Comprehensive logging of data access and user actions for compliance
+- **Backup Strategy**: Automated daily backups with point-in-time recovery capabilities
 
-**Performance Optimization:**
-- **Database queries:** SQL aggregations in Supabase (not Python post-processing in Superset)
-- **Superset caching:** Enable query result caching to reduce DB load
-- **Docker resource limits:** n8n capped at 1.5GB RAM, Superset at 2GB RAM (prevents resource starvation on 4GB VPS)
-- **CDN:** Cloudflare for static asset caching (Next.js images, CSS, JS)
+### Scalability Considerations
 
-**API Rate Limit Handling:**
-- **Xero limits:** 60 req/min, 10,000 req/day
-- **Strategy:** Batch requests (fetch 100 records per call), exponential backoff on 429 errors, 2-hour sync designed to stay within limits
-- **Monitoring:** n8n workflow logs track rate limit errors
+- **Frontend Scaling**: Vercel's edge network and CDN for global performance
+  - Automatic scaling based on traffic
+  - Edge caching for static assets
+  - Serverless function auto-scaling
+- **Database Scaling**: Supabase's automatic scaling with read replicas for heavy dashboard queries
+  - Vertical scaling: 4 vCPU → 8 vCPU as needed
+  - Connection pooling to handle concurrent users
+  - Query optimization via indexes and materialized views
+- **ETL Scaling**: n8n horizontal scaling for increased data processing volumes
+  - Workflow concurrency limits configurable
+  - Queue-based execution for reliability
+- **AI Scaling**: Independent PydanticAI service scaling based on conversational query volume
+  - AWS Lambda auto-scaling (2-50 concurrent instances)
+  - Provisioned concurrency for warm starts
+  - Independent resource allocation from core app
 
-**Development Workflow:**
-- **Local development:** Docker Compose for n8n/Superset, Supabase cloud for DB (shared dev instance), Next.js local dev server
-- **Version control:** Git with feature branches, PR reviews for production changes
-- **Deployment:** Manual deployment for MVP (SSH to VPS, docker-compose pull/up); CI/CD deferred to Month 2
-- **Environment management:** `.env` files for local, environment variables on VPS/Vercel for production
+### Architecture Reference
 
-**Cloud Provider Comparison (VPS vs GCP):**
+**📄 For detailed architecture specifications, see:**
 
-| Factor | VPS (Hetzner/DigitalOcean) | GCP (Google Cloud Platform) | Decision |
-|--------|---------------------------|----------------------------|----------|
-| **Monthly Cost** | $10-20 AUD | $45-65 AUD | **VPS** |
-| **Predictability** | Flat rate | Usage-based (egress charges) | **VPS** |
-| **Setup Complexity** | Simple (SSH + Docker) | Moderate (multiple services, IAM) | **VPS** |
-| **Monitoring** | Basic (Docker logs, manual) | Advanced (Cloud Monitoring built-in) | **GCP** |
-| **Auto-scaling** | Manual VM resize | Cloud Run, autoscaling VMs | **GCP** |
-| **Vendor Lock-in** | Low (Docker Compose portable) | Moderate (GCP-specific services) | **VPS** |
-| **Sufficient for 20 users?** | ✅ Yes | ✅ Yes (but overkill) | **VPS** |
+**[XeroPulse Fullstack Architecture Document](../architecture/index.md)**
 
-**Decision: VPS (Hetzner preferred at €4.51/month, DigitalOcean fallback at $12/month)**
+The architecture document provides comprehensive technical details including:
+- Complete tech stack with versions and rationale
+- Data models and TypeScript interfaces
+- API specifications (tRPC procedures and REST endpoints)
+- Database schema with tables, indexes, and RLS policies
+- Frontend component architecture
+- Backend API route structure
+- Deployment configurations for all services
+- Security architecture and authentication flows
+- Core workflows and ETL processes
+- External API integration specifications
 
-**Rationale:**
-- **Cost alignment:** VPS hits $15/month target; GCP would be 3-6x over budget
-- **Simplicity:** Docker Compose on single VM vs. orchestrating Cloud Run, Cloud SQL, Compute Engine
-- **Predictable billing:** No surprise egress charges (VPS includes 4-20TB bandwidth)
-- **MVP-appropriate:** GCP's power (auto-scaling, multi-region) not needed for 20-user internal tool
-- **Project Brief constraint:** Budget limit ($200 max, $15 target) drives VPS choice
-
-**GCP Reconsidered If:**
-- Scale exceeds 100+ users (auto-scaling valuable)
-- Need BigQuery integration for advanced analytics
-- Enterprise security requirements (VPC Service Controls, Cloud Armor)
-- Operating budget increases to $100-200/month (GCP benefits justify cost)
+**All development should reference both this PRD and the Architecture Document for complete project understanding.**
 
 ---
 

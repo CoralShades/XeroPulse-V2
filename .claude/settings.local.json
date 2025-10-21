@@ -1,11 +1,14 @@
 {
+  "includeCoAuthoredBy": false,
   "permissions": {
     "allow": [
       "WebSearch",
-      "Bash(powershell:*)"
+      "Bash(powershell:*)",
+      "Bash(md-tree explode:*)",
+      "Bash(./doctor:*)",
+      "Bash(mkdir:*)"
     ],
     "deny": [],
     "ask": []
-  },
-  "includeCoAuthoredBy": false
+  }
 }

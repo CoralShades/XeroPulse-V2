@@ -1,0 +1,186 @@
+# .clauderc - Claude Code Configuration for XeroPulse
+
+instructions: |
+  # XeroPulse Project Guidelines
+  
+  ## Project Context
+  You are working on XeroPulse, a financial intelligence platform that transforms Xero accounting data 
+  into role-based dashboards. Current status: Planning phase complete, implementation pending.
+  
+  Refer to CLAUDE.md for comprehensive project overview, architecture, and implementation strategy.
+  
+  ## CRITICAL MCP Server Rules
+  
+  ### Xero MCP Server (READ-ONLY)
+  - **MUST use for**: Validation, data inspection, reading Xero data structure
+  - **NEVER use for**: Creating, updating, or deleting any Xero data
+  - **Critical**: Xero MCP is strictly READ-ONLY - any write operations are FORBIDDEN
+  - Use Xero MCP to validate data structures before syncing to Supabase
+  
+  ### Shadcn MCP Server (REQUIRED)
+  - **MUST consult** before creating or modifying any UI components
+  - Always check available Shadcn components before building custom solutions
+  - Use Shadcn MCP for component selection, customization patterns, and best practices
+  - Prefer Shadcn components over custom implementations when available
+  
+  ### Supabase MCP Server (REQUIRED)
+  - **MUST use** for all database operations, schema changes, and queries
+  - Consult when creating migrations, RLS policies, functions, or edge functions
+  - Use for real-time subscriptions and database connection management
+  
+  ## Required Documentation References
+  
+  ### Database & Backend Operations
+  Before creating or modifying ANY database-related code, ALWAYS refer to:
+  
+  1. **D:\ailocal\XeroPulse\ai_docs\Database-Declarative Database Schema.md**
+     - When: Designing or modifying database schema
+     - Use for: Table definitions, relationships, constraints
+  
+  2. **D:\ailocal\XeroPulse\ai_docs\Database-Create migration.md**
+     - When: Creating new migrations or schema changes
+     - Use for: Migration file structure and best practices
+  
+  3. **D:\ailocal\XeroPulse\ai_docs\Database-Create RLS policies.md**
+     - When: Implementing or modifying Row Level Security
+     - Use for: RLS policy patterns, testing, organization isolation
+  
+  4. **D:\ailocal\XeroPulse\ai_docs\Database-Create functions.md**
+     - When: Creating stored procedures or database functions
+     - Use for: Function patterns, error handling, security context
+  
+  5. **D:\ailocal\XeroPulse\ai_docs\Postgres SQL Style Guide.md**
+     - When: Writing ANY SQL code (queries, migrations, functions)
+     - Use for: Naming conventions, formatting, performance patterns
+  
+  6. **D:\ailocal\XeroPulse\ai_docs\Writing Supabase Edge Functions.md**
+     - When: Creating serverless functions or API endpoints
+     - Use for: Edge function structure, authentication, error handling
+  
+  7. **D:\ailocal\XeroPulse\ai_docs\Supabase Realtime AI Assistant Guide.md**
+     - When: Implementing real-time features or subscriptions
+     - Use for: Real-time patterns, security, performance optimization
+  
+  ### Authentication & Setup
+  
+  8. **D:\ailocal\XeroPulse\ai_docs\Bootstrap Next.js app with Supabase Auth.md**
+     - When: Setting up authentication or user management
+     - Use for: Auth configuration, session management, protected routes
+  
+  ## Development Workflow
+  
+  ### Before Starting Any Task:
+  1. Check CLAUDE.md for architectural context and patterns
+  2. Identify which MCP servers are needed (Xero READ-ONLY, Shadcn, Supabase)
+  3. Review relevant ai_docs files based on task type
+  4. Verify approach aligns with tech stack requirements
+  
+  ### Component Creation:
+  1. **FIRST**: Consult Shadcn MCP for available components
+  2. Check docs/architecture/frontend-architecture.md for patterns
+  3. Implement with TypeScript strict mode
+  4. Follow AG-UI Enterprise + Shadcn/ui v4 standards
+  5. Ensure WCAG AA accessibility compliance
+  
+  ### Database Operations:
+  1. **FIRST**: Review relevant ai_docs files (schema, migrations, RLS, functions)
+  2. **THEN**: Use Supabase MCP for implementation
+  3. Always implement RLS policies for multi-tenancy
+  4. Test with actual user sessions, never service role
+  5. Include organization_id in all queries
+  6. Log to sync_sessions and admin_actions tables
+  
+  ### Data Validation:
+  1. Use Xero MCP to inspect data structures (READ-ONLY)
+  2. Validate against expected schema before sync
+  3. Never attempt to modify Xero data via MCP
+  
+  ## Code Quality Standards
+  
+  - **TypeScript**: Strict mode, explicit types, no 'any'
+  - **Error Handling**: Try-catch blocks, proper error types, user-friendly messages
+  - **Security**: Always validate input, sanitize output, enforce RLS
+  - **Performance**: Use indexes, avoid N+1 queries, implement caching
+  - **Testing**: Write tests for critical paths, test RLS policies
+  - **Naming**: Follow Postgres SQL Style Guide for database, camelCase for TypeScript
+  
+  ## Multi-Tenancy Enforcement
+  
+  - Every database query MUST filter by organization_id
+  - Every RLS policy MUST enforce organization isolation
+  - Staff users MUST only see assigned clients
+  - All dashboard embeds MUST include user security context
+  
+  ## Critical Gotchas
+  
+  - **RLS Testing**: Test with authenticated users, not service role
+  - **JWT Expiry**: Refresh tokens before 30 minutes remaining
+  - **Sync Idempotency**: Use UPSERT with (organization_id, source, source_id)
+  - **Rate Limits**: Implement exponential backoff for Xero API
+  - **CORS**: Ensure Metabase whitelists Next.js domain
+  
+  ## When Uncertain
+  
+  1. Check CLAUDE.md first for architectural guidance
+  2. Consult relevant ai_docs files for implementation patterns
+  3. Use appropriate MCP servers (Shadcn for UI, Supabase for DB, Xero READ-ONLY)
+  4. Ask for clarification rather than making assumptions
+  5. Reference docs/architecture/* for detailed specifications
+  
+  ## Budget Constraints
+  
+  - Target $15-20 AUD/month total operating cost
+  - Validate licensing costs before adding new dependencies
+  - Optimize for performance to minimize compute costs
+  
+  ## Do NOT
+  
+  - Write to Xero via MCP (READ-ONLY enforcement)
+  - Skip RLS policy implementation
+  - Use 'any' type in TypeScript
+  - Ignore the ai_docs guidelines for database operations
+  - Create custom components without checking Shadcn first
+  - Make database changes without migrations
+  - Deploy without testing RLS policies
+  - Hardcode organization IDs or bypass multi-tenancy
+
+mcp_servers:
+  - name: shadcn
+    description: "Shadcn UI component library - REQUIRED for all component decisions"
+  - name: supabase
+    description: "Supabase MCP - REQUIRED for all database operations"
+  - name: xero
+    description: "Xero MCP - READ-ONLY for validation and data inspection"
+
+# File paths for quick reference
+important_files:
+  architecture:
+    - CLAUDE.md
+    - docs/architecture/index.md
+    - docs/architecture/tech-stack.md
+    - docs/architecture/database-schema.md
+    - docs/architecture/frontend-architecture.md
+    - docs/architecture/backend-architecture.md
+  
+  database_guides:
+    - D:\ailocal\XeroPulse\ai_docs\Database-Declarative Database Schema.md
+    - D:\ailocal\XeroPulse\ai_docs\Database-Create migration.md
+    - D:\ailocal\XeroPulse\ai_docs\Database-Create RLS policies.md
+    - D:\ailocal\XeroPulse\ai_docs\Database-Create functions.md
+    - D:\ailocal\XeroPulse\ai_docs\Postgres SQL Style Guide.md
+  
+  supabase_guides:
+    - D:\ailocal\XeroPulse\ai_docs\Bootstrap Next.js app with Supabase Auth.md
+    - D:\ailocal\XeroPulse\ai_docs\Supabase Realtime AI Assistant Guide.md
+    - D:\ailocal\XeroPulse\ai_docs\Writing Supabase Edge Functions.md
+  
+  product_requirements:
+    - docs/prd/index.md
+    - docs/prd/epic-list.md
+    - docs/brief.md
+  
+  ai_prompts:
+    - docs/ai-prompts/platform-ui-master-prompt.md
+    - docs/ai-prompts/01-authentication-system.md
+    - docs/ai-prompts/02-dashboard-shell-navigation.md
+    - docs/ai-prompts/03-user-management-admin.md

@@ -1,0 +1,25 @@
+# XeroPulse Fullstack Architecture Document
+
+## Table of Contents
+
+- [XeroPulse Fullstack Architecture Document](#table-of-contents)
+  - [Introduction](#introduction)
+  - [High Level Architecture Section](#high-level-architecture-section)
+  - [High Level Architecture](#high-level-architecture)
+  - [Tech Stack Section](#tech-stack-section)
+  - [Tech Stack](#tech-stack)
+  - [Data Models Section](#data-models-section)
+  - [Data Models](#data-models)
+  - [API Specification](#api-specification)
+  - [Components](#components)
+  - [External APIs](#external-apis)
+  - [Core Workflows](#core-workflows)
+  - [Database Schema](#database-schema)
+  - [Frontend Architecture Section](#frontend-architecture-section)
+  - [Frontend Architecture](#frontend-architecture)
+  - [Backend Architecture Section](#backend-architecture-section)
+  - [Backend Architecture](#backend-architecture)
+  - [Deployment Architecture Section](#deployment-architecture-section)
+  - [Deployment Architecture](#deployment-architecture)
+  - [Security Architecture Section](#security-architecture-section)
+  - [Security Architecture](#security-architecture)

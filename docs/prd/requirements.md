@@ -1,76 +1,77 @@
 # Requirements
 
-### Functional
+### Functional Requirements
 
-**FR1:** The system shall authenticate to Xero API using OAuth2 and extract financial data (invoices, contacts, transactions, payments, accounts, budgets) via scheduled n8n workflows.
+**FR1:** The system shall provide secure user authentication using Supabase Auth with email/password login, automated password reset workflow, and session management with role-based access control.
 
-**FR2:** The system shall authenticate to XPM/Workflow Max API and extract practice management data (jobs, time entries, costs, billable rates, WIP) for integration with financial data.
+**FR2:** The system shall implement role-based access control (RBAC) with three primary roles: Admin (full access), Role A/Sales (sales performance dashboards), and Role B/Finance (financial health dashboards).
 
-**FR3:** The system shall sync data from all connected sources (Xero, XPM, Suntax) to Supabase PostgreSQL database every 2 hours with automated retry logic on failures.
+**FR3:** The system shall authenticate to Xero API using OAuth2 and extract financial data (invoices, contacts, transactions, payments, accounts, budgets) via scheduled n8n workflows.
 
-**FR4:** The system shall provide 8 specialized dashboards via Apache Superset:
-- Dashboard 1: Income vs Expenses (cash flow with 8-week rolling averages)
-- Dashboard 2: Monthly Invoicing to Budget (actual vs budget comparison)
-- Dashboard 3: YTD/MTD View (time-aggregated performance toggle)
-- Dashboard 4: Work In Progress by Team (unbilled WIP with aging breakdown)
-- Dashboard 5: ATO Lodgment Status (tax compliance by client type)
-- Dashboard 6: Services Analysis (service line profitability metrics)
-- Dashboard 7: Debtors/AR Aging (collections monitoring with DSO trends)
-- Dashboard 8: Client Recoverability (client-level WIP and profitability)
+**FR4:** The system shall authenticate to XPM/Workflow Max API and extract practice management data (jobs, time entries, costs, billable rates, WIP) for integration with financial data.
 
-**FR5:** The MVP shall deliver Dashboards 1, 2, and 7 (Xero-only data) by October 31, 2025, with remaining dashboards delivered in Month 2.
+**FR5:** The system shall sync data from all connected sources (Xero, XPM) to Supabase PostgreSQL database daily with automated retry logic and error handling.
 
-**FR6:** The system shall provide secure user authentication with email/password login, password reset workflow, and session management via Supabase Auth.
+**FR6:** The system shall provide 8 specialized business intelligence dashboards via Metabase:
 
-**FR7:** The system shall implement role-based access control (RBAC) with minimum three roles: executives (all dashboard access), managers (subset access), and staff (operational dashboards only).
+- **Dashboard 1: Income vs Expenses** - Cash flow monitoring with 8-week rolling averages
+- **Dashboard 2: Monthly Invoicing to Budget** - Actual vs budget comparison with variance analysis  
+- **Dashboard 3: YTD/MTD Budget Views** - Time-aggregated performance with toggle capability
+- **Dashboard 4: Work In Progress by Team** - Unbilled WIP with aging breakdown (<30, 31-60, 61-90, 90+ days)
+- **Dashboard 5: ATO Lodgment Status** - Tax compliance tracking by client type and lodgment deadlines
+- **Dashboard 6: Services Analysis** - Service line profitability across EOFY, SMSF, Bookkeeping, ITR, BAS, Advisory
+- **Dashboard 7: Debtors/AR Aging** - Collections monitoring with DSO trends and top debtors analysis  
+- **Dashboard 8: Client Recoverability** - Client-level WIP and profitability assessment
 
-**FR8:** The system shall provide user management UI allowing administrators to add/remove users, assign roles, and manage dashboard permissions.
+**FR7:** The Next.js web portal shall display only dashboards authorized for the logged-in user's role, with embedded Metabase visualizations via secure iframe integration.
 
-**FR9:** The Next.js web portal shall display only dashboards authorized for the logged-in user's role, with embedded Superset visualizations via iframe or SDK.
+**FR8:** The system shall provide user management interface allowing administrators to add/remove users, assign roles, and manage dashboard permissions.
 
-**FR10:** The system shall calculate and display Work In Progress (WIP) values using formula: (Time Value + Billable Costs) - Progress Invoices, with aging breakdown by team.
+**FR9:** The system shall calculate and display Work In Progress (WIP) values using formula: (Time Value + Billable Costs) - Progress Invoices, with team-based aging breakdown.
 
-**FR11:** The system shall track service line profitability metrics including Time Added $, Invoiced Amount, Net Write-Ups, Time Revenue, and Average Charge Rate across service categories (EOFY, SMSF, Bookkeeping, ITR, BAS, Advisory, ASIC, FBT, Client Service, Tax Planning).
+**FR10:** The system shall integrate PydanticAI conversational analytics capabilities, enabling natural language queries about business data through CopilotKit interface (implemented as NFR enhancement).
 
-**FR12:** The system shall provide Accounts Receivable aging analysis with buckets (<30 days, 31-60 days, 61-90 days, 90+ days), DSO trends, and top debtors list.
+**FR11:** The system shall support self-service Xero OAuth connections, allowing users to securely connect their own Xero accounts via guided wizard interface.
 
-**FR13:** The system shall log sync execution status, errors, and data freshness timestamps for monitoring and troubleshooting.
+**FR12:** The system shall provide manual ETL trigger functionality for administrators to refresh data on-demand outside of scheduled sync intervals.
 
-**FR14:** The system shall support responsive design for desktop and tablet viewing (1024px+ screen width) with basic mobile browser compatibility (view-only, no optimization for MVP).
+**FR13:** The system shall log all sync execution status, errors, data freshness timestamps, and user access for monitoring, troubleshooting, and audit purposes.
 
-**FR15:** The system shall display last updated timestamp on all dashboards to indicate data freshness (2-hour sync interval).
+**FR14:** The system shall support responsive design optimized for desktop and tablet viewing (1024px+ screen width) with basic mobile browser compatibility.
 
-### Non-Functional
+**FR15:** The system shall display last updated timestamp on all dashboards to indicate data freshness and sync status.
+
+### Non-Functional Requirements
 
 **NFR1:** Dashboard load time shall be <3 seconds for 95% of requests under normal operating conditions with 20 concurrent users.
 
-**NFR2:** Data sync success rate shall maintain 95%+ reliability over rolling 7-day periods, completing within 2-hour window.
+**NFR2:** Data sync success rate shall maintain >99% reliability over rolling 7-day periods, completing within scheduled daily window.
 
 **NFR3:** System uptime shall exceed 99% availability (less than 7.2 hours downtime per month) for production environment.
 
-**NFR4:** Total monthly operating costs shall remain under $20 AUD/month, targeting $15/month baseline (VPS + Supabase + domain + services).
+**NFR4:** Total monthly operating costs shall remain under $50 AUD/month, targeting optimal balance of functionality and cost efficiency.
 
-**NFR5:** All data transmission shall use HTTPS/TLS encryption; credentials shall be stored as environment variables with n8n credential encryption.
+**NFR5:** All data transmission shall use HTTPS/TLS encryption; credentials shall be stored securely with proper environment variable management.
 
-**NFR6:** Supabase shall provide encrypted storage at rest (AES-256) for all financial data.
+**NFR6:** Supabase shall provide encrypted storage at rest (AES-256) for all financial and business data with appropriate backup strategies.
 
-**NFR7:** User passwords shall be hashed using bcrypt via Supabase Auth with secure session management using JWT tokens.
+**NFR7:** User authentication shall use industry-standard security practices with bcrypt password hashing and secure JWT token session management.
 
-**NFR8:** The system shall support 20 simultaneous users without performance degradation during dashboard viewing.
+**NFR8:** The system shall support 20 simultaneous users without performance degradation during dashboard viewing and data interaction.
 
-**NFR9:** Database queries for dashboard rendering shall complete in <1 second for most visualizations.
+**NFR9:** Database queries for dashboard rendering shall complete in <2 seconds for standard visualizations, <5 seconds for complex aggregations.
 
-**NFR10:** The platform shall comply with Xero API rate limits (60 requests/minute, 10,000 requests/day) through batching and exponential backoff on 429 errors.
+**NFR10:** The platform shall comply with Xero API rate limits (60 requests/minute, 10,000 requests/day) through intelligent batching and exponential backoff strategies.
 
-**NFR11:** VPS infrastructure shall run Docker Compose orchestration with resource limits (n8n capped at 1.5GB RAM, Superset at 2GB RAM on 4GB VPS minimum).
+**NFR11:** **PydanticAI Integration (Non-Functional Requirement):** The system shall integrate PydanticAI FastAPI microservice for conversational analytics as an enhancement feature that does not impact core BI functionality.
 
-**NFR12:** The codebase shall use monorepo structure with version-controlled n8n workflows, Superset dashboard exports, and infrastructure-as-code for reproducible deployments.
+**NFR12:** **CopilotKit Integration:** The system shall use self-hosted CopilotKit for conversational interface with fallback to custom chat implementation if functionality requirements are not met.
 
-**NFR13:** The system shall implement automated weekly VPS snapshots for disaster recovery with documented restoration procedure.
+**NFR13:** The system shall use AG-UI enterprise components for data-intensive interfaces with Shadcn v4 base components and MCP integration for consistent design system.
 
-**NFR14:** Supabase database schema shall use normalized tables mirroring Xero entities with appropriate indexing for query performance optimization.
+**NFR14:** The codebase shall use monorepo structure with version-controlled workflows, dashboard configurations, and infrastructure-as-code for reproducible deployments.
 
-**NFR15:** The architecture shall support horizontal scaling post-MVP (Supabase Pro upgrade, larger VPS, load balancing) without requiring fundamental refactoring.
+**NFR15:** The architecture shall support horizontal scaling (database upgrade, larger infrastructure, load balancing) without requiring fundamental refactoring.
 
 ---
 

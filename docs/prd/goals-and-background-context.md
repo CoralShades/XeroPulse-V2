@@ -2,25 +2,26 @@
 
 ### Goals
 
-- Deliver automated financial intelligence dashboards that sync Xero/XPM/Suntax data every 2 hours to eliminate 5-10 hours weekly of manual reporting
-- Launch MVP with 3 production dashboards by October 31, 2025, supporting 20 users with complete authentication and role-based access control
-- Achieve 90%+ cost savings versus commercial BI platforms by maintaining total operating costs under $20 AUD/month
-- Enable sub-60-second insight access for all stakeholders, replacing 3-7 day report turnaround times
-- Establish scalable open-source architecture supporting 8 total dashboards with zero vendor lock-in
-- Achieve 80%+ user adoption within 30 days post-launch with 99%+ data sync reliability
+- **Centralize BI Access**: Provide a single, user-friendly portal for all 20 team members to access business intelligence dashboards with role-based security
+- **Automate Data Pipeline**: Maintain a fully automated daily data pipeline from Xero and Workflow Max to Supabase with >99% uptime using n8n workflows
+- **Enable Conversational Analytics**: Integrate PydanticAI-powered natural language querying capabilities for intuitive data exploration and insights
+- **Achieve Cost Efficiency**: Maintain total operating costs under $50 AUD/month while delivering enterprise-grade functionality
+- **Ensure Scalable Architecture**: Build modern Next.js + AG-UI + Metabase platform supporting 8 specialized dashboards with zero vendor lock-in
+- **Deliver Rapid ROI**: Launch MVP with core financial dashboards by December 31, 2025, achieving 80%+ user adoption within 30 days
 
 ### Background Context
 
-Professional services firms using Xero (accounting) and XPM/Workflow Max (practice management) face a critical gap between data collection and actionable insights. Finance teams spend 5-10 hours weekly manually extracting data, formatting reports in Excel, and distributing static snapshots that become outdated within days. Current workflows involve information overload (users see all Xero data or none), delayed insights (3-7 day lag), and no role-based access for tailored dashboards.
+Professional services firms using Xero (accounting) and XPM/Workflow Max (practice management) face a critical gap between data collection and actionable insights. Current workflows involve fragmented access to business intelligence, with finance teams spending 5-10 hours weekly manually extracting data, formatting reports in Excel, and distributing static snapshots that become outdated within days.
 
-XeroPulse solves this through a fully open-source ETL architecture: n8n workflows sync data from Xero/XPM/Suntax APIs every 2 hours into Supabase PostgreSQL, Apache Superset generates 8 specialized dashboards (Income vs Expenses, WIP tracking, AR Aging, Service profitability, Tax compliance status, etc.), and a Next.js web portal provides secure login with granular role-based permissions. The platform achieves $15/month operating cost (98% below Power BI's $750/month) while delivering faster deployment (4 weeks vs. 3-6 months) and complete control through self-hosted infrastructure.
+XeroPulse solves this through a modern, conversational-first BI architecture: n8n workflows extract data from Xero/XPM APIs into Supabase PostgreSQL, Metabase generates embedded dashboards with role-based access, Next.js provides the secure web portal with AG-UI enterprise components, and PydanticAI enables natural language queries about business data. The platform delivers sub-60-second insight access, eliminates manual reporting overhead, and provides conversational analytics capabilities that transform how teams interact with financial data.
 
-**Discovered Context:** Based on comprehensive analysis of dashboard mockups and requirements (22 visual references), XeroPulse addresses unique professional services needs: client billing and WIP tracking, service line profitability (EOFY, SMSF, Bookkeeping, ITR, BAS, Advisory), tax lodgment compliance status, client recoverability, and budget/cash flow monitoring.
+**Unified Architecture Context**: This PRD resolves architectural conflicts between previous documents by establishing Next.js + AG-UI + CopilotKit + PydanticAI + Supabase + n8n + Metabase as the definitive technology stack, balancing modern development capabilities with enterprise-grade data processing requirements.
 
 ### Change Log
 
 | Date | Version | Description | Author |
 |------|---------|-------------|--------|
+| 2025-10-22 | 2.0 | Unified PRD incorporating final architecture decisions (Next.js + AG-UI + CopilotKit + PydanticAI + Supabase + n8n + Metabase), resolved document conflicts, comprehensive epic planning | John (PM) |
 | 2025-10-15 | 1.1 | Added comprehensive PM validation report (94% quality score, READY FOR ARCHITECT) | PM Agent |
 | 2025-10-15 | 1.0 | Initial PRD creation from Project Brief | PM Agent |
 
