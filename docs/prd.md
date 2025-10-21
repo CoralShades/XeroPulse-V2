@@ -1,28 +1,29 @@
-# XeroPulse Product Requirements Document (PRD)
+# XeroPulse Unified Product Requirements Document (PRD)
 
 ## Goals and Background Context
 
 ### Goals
 
-- Deliver automated financial intelligence dashboards that sync Xero/XPM/Suntax data every 2 hours to eliminate 5-10 hours weekly of manual reporting
-- Launch MVP with 3 production dashboards by October 31, 2025, supporting 20 users with complete authentication and role-based access control
-- Achieve 90%+ cost savings versus commercial BI platforms by maintaining total operating costs under $20 AUD/month
-- Enable sub-60-second insight access for all stakeholders, replacing 3-7 day report turnaround times
-- Establish scalable open-source architecture supporting 8 total dashboards with zero vendor lock-in
-- Achieve 80%+ user adoption within 30 days post-launch with 99%+ data sync reliability
+- **Centralize BI Access**: Provide a single, user-friendly portal for all 20 team members to access business intelligence dashboards with role-based security
+- **Automate Data Pipeline**: Maintain a fully automated daily data pipeline from Xero and Workflow Max to Supabase with >99% uptime using n8n workflows
+- **Enable Conversational Analytics**: Integrate PydanticAI-powered natural language querying capabilities for intuitive data exploration and insights
+- **Achieve Cost Efficiency**: Maintain total operating costs under $50 AUD/month while delivering enterprise-grade functionality
+- **Ensure Scalable Architecture**: Build modern Next.js + AG-UI + Metabase platform supporting 8 specialized dashboards with zero vendor lock-in
+- **Deliver Rapid ROI**: Launch MVP with core financial dashboards by December 31, 2025, achieving 80%+ user adoption within 30 days
 
 ### Background Context
 
-Professional services firms using Xero (accounting) and XPM/Workflow Max (practice management) face a critical gap between data collection and actionable insights. Finance teams spend 5-10 hours weekly manually extracting data, formatting reports in Excel, and distributing static snapshots that become outdated within days. Current workflows involve information overload (users see all Xero data or none), delayed insights (3-7 day lag), and no role-based access for tailored dashboards.
+Professional services firms using Xero (accounting) and XPM/Workflow Max (practice management) face a critical gap between data collection and actionable insights. Current workflows involve fragmented access to business intelligence, with finance teams spending 5-10 hours weekly manually extracting data, formatting reports in Excel, and distributing static snapshots that become outdated within days.
 
-XeroPulse solves this through a fully open-source ETL architecture: n8n workflows sync data from Xero/XPM/Suntax APIs every 2 hours into Supabase PostgreSQL, Apache Superset generates 8 specialized dashboards (Income vs Expenses, WIP tracking, AR Aging, Service profitability, Tax compliance status, etc.), and a Next.js web portal provides secure login with granular role-based permissions. The platform achieves $15/month operating cost (98% below Power BI's $750/month) while delivering faster deployment (4 weeks vs. 3-6 months) and complete control through self-hosted infrastructure.
+XeroPulse solves this through a modern, conversational-first BI architecture: n8n workflows extract data from Xero/XPM APIs into Supabase PostgreSQL, Metabase generates embedded dashboards with role-based access, Next.js provides the secure web portal with AG-UI enterprise components, and PydanticAI enables natural language queries about business data. The platform delivers sub-60-second insight access, eliminates manual reporting overhead, and provides conversational analytics capabilities that transform how teams interact with financial data.
 
-**Discovered Context:** Based on comprehensive analysis of dashboard mockups and requirements (22 visual references), XeroPulse addresses unique professional services needs: client billing and WIP tracking, service line profitability (EOFY, SMSF, Bookkeeping, ITR, BAS, Advisory), tax lodgment compliance status, client recoverability, and budget/cash flow monitoring.
+**Unified Architecture Context**: This PRD resolves architectural conflicts between previous documents by establishing Next.js + AG-UI + CopilotKit + PydanticAI + Supabase + n8n + Metabase as the definitive technology stack, balancing modern development capabilities with enterprise-grade data processing requirements.
 
 ### Change Log
 
 | Date | Version | Description | Author |
 |------|---------|-------------|--------|
+| 2025-10-22 | 2.0 | Unified PRD incorporating final architecture decisions (Next.js + AG-UI + CopilotKit + PydanticAI + Supabase + n8n + Metabase), resolved document conflicts, comprehensive epic planning | John (PM) |
 | 2025-10-15 | 1.1 | Added comprehensive PM validation report (94% quality score, READY FOR ARCHITECT) | PM Agent |
 | 2025-10-15 | 1.0 | Initial PRD creation from Project Brief | PM Agent |
 
@@ -30,77 +31,78 @@ XeroPulse solves this through a fully open-source ETL architecture: n8n workflow
 
 ## Requirements
 
-### Functional
+### Functional Requirements
 
-**FR1:** The system shall authenticate to Xero API using OAuth2 and extract financial data (invoices, contacts, transactions, payments, accounts, budgets) via scheduled n8n workflows.
+**FR1:** The system shall provide secure user authentication using Supabase Auth with email/password login, automated password reset workflow, and session management with role-based access control.
 
-**FR2:** The system shall authenticate to XPM/Workflow Max API and extract practice management data (jobs, time entries, costs, billable rates, WIP) for integration with financial data.
+**FR2:** The system shall implement role-based access control (RBAC) with three primary roles: Admin (full access), Role A/Sales (sales performance dashboards), and Role B/Finance (financial health dashboards).
 
-**FR3:** The system shall sync data from all connected sources (Xero, XPM, Suntax) to Supabase PostgreSQL database every 2 hours with automated retry logic on failures.
+**FR3:** The system shall authenticate to Xero API using OAuth2 and extract financial data (invoices, contacts, transactions, payments, accounts, budgets) via scheduled n8n workflows.
 
-**FR4:** The system shall provide 8 specialized dashboards via Apache Superset:
-- Dashboard 1: Income vs Expenses (cash flow with 8-week rolling averages)
-- Dashboard 2: Monthly Invoicing to Budget (actual vs budget comparison)
-- Dashboard 3: YTD/MTD View (time-aggregated performance toggle)
-- Dashboard 4: Work In Progress by Team (unbilled WIP with aging breakdown)
-- Dashboard 5: ATO Lodgment Status (tax compliance by client type)
-- Dashboard 6: Services Analysis (service line profitability metrics)
-- Dashboard 7: Debtors/AR Aging (collections monitoring with DSO trends)
-- Dashboard 8: Client Recoverability (client-level WIP and profitability)
+**FR4:** The system shall authenticate to XPM/Workflow Max API and extract practice management data (jobs, time entries, costs, billable rates, WIP) for integration with financial data.
 
-**FR5:** The MVP shall deliver Dashboards 1, 2, and 7 (Xero-only data) by October 31, 2025, with remaining dashboards delivered in Month 2.
+**FR5:** The system shall sync data from all connected sources (Xero, XPM) to Supabase PostgreSQL database daily with automated retry logic and error handling.
 
-**FR6:** The system shall provide secure user authentication with email/password login, password reset workflow, and session management via Supabase Auth.
+**FR6:** The system shall provide 8 specialized business intelligence dashboards via Metabase:
 
-**FR7:** The system shall implement role-based access control (RBAC) with minimum three roles: executives (all dashboard access), managers (subset access), and staff (operational dashboards only).
+- **Dashboard 1: Income vs Expenses** - Cash flow monitoring with 8-week rolling averages
+- **Dashboard 2: Monthly Invoicing to Budget** - Actual vs budget comparison with variance analysis  
+- **Dashboard 3: YTD/MTD Budget Views** - Time-aggregated performance with toggle capability
+- **Dashboard 4: Work In Progress by Team** - Unbilled WIP with aging breakdown (<30, 31-60, 61-90, 90+ days)
+- **Dashboard 5: ATO Lodgment Status** - Tax compliance tracking by client type and lodgment deadlines
+- **Dashboard 6: Services Analysis** - Service line profitability across EOFY, SMSF, Bookkeeping, ITR, BAS, Advisory
+- **Dashboard 7: Debtors/AR Aging** - Collections monitoring with DSO trends and top debtors analysis  
+- **Dashboard 8: Client Recoverability** - Client-level WIP and profitability assessment
 
-**FR8:** The system shall provide user management UI allowing administrators to add/remove users, assign roles, and manage dashboard permissions.
+**FR7:** The Next.js web portal shall display only dashboards authorized for the logged-in user's role, with embedded Metabase visualizations via secure iframe integration.
 
-**FR9:** The Next.js web portal shall display only dashboards authorized for the logged-in user's role, with embedded Superset visualizations via iframe or SDK.
+**FR8:** The system shall provide user management interface allowing administrators to add/remove users, assign roles, and manage dashboard permissions.
 
-**FR10:** The system shall calculate and display Work In Progress (WIP) values using formula: (Time Value + Billable Costs) - Progress Invoices, with aging breakdown by team.
+**FR9:** The system shall calculate and display Work In Progress (WIP) values using formula: (Time Value + Billable Costs) - Progress Invoices, with team-based aging breakdown.
 
-**FR11:** The system shall track service line profitability metrics including Time Added $, Invoiced Amount, Net Write-Ups, Time Revenue, and Average Charge Rate across service categories (EOFY, SMSF, Bookkeeping, ITR, BAS, Advisory, ASIC, FBT, Client Service, Tax Planning).
+**FR10:** The system shall integrate PydanticAI conversational analytics capabilities, enabling natural language queries about business data through CopilotKit interface (implemented as NFR enhancement).
 
-**FR12:** The system shall provide Accounts Receivable aging analysis with buckets (<30 days, 31-60 days, 61-90 days, 90+ days), DSO trends, and top debtors list.
+**FR11:** The system shall support self-service Xero OAuth connections, allowing users to securely connect their own Xero accounts via guided wizard interface.
 
-**FR13:** The system shall log sync execution status, errors, and data freshness timestamps for monitoring and troubleshooting.
+**FR12:** The system shall provide manual ETL trigger functionality for administrators to refresh data on-demand outside of scheduled sync intervals.
 
-**FR14:** The system shall support responsive design for desktop and tablet viewing (1024px+ screen width) with basic mobile browser compatibility (view-only, no optimization for MVP).
+**FR13:** The system shall log all sync execution status, errors, data freshness timestamps, and user access for monitoring, troubleshooting, and audit purposes.
 
-**FR15:** The system shall display last updated timestamp on all dashboards to indicate data freshness (2-hour sync interval).
+**FR14:** The system shall support responsive design optimized for desktop and tablet viewing (1024px+ screen width) with basic mobile browser compatibility.
 
-### Non-Functional
+**FR15:** The system shall display last updated timestamp on all dashboards to indicate data freshness and sync status.
+
+### Non-Functional Requirements
 
 **NFR1:** Dashboard load time shall be <3 seconds for 95% of requests under normal operating conditions with 20 concurrent users.
 
-**NFR2:** Data sync success rate shall maintain 95%+ reliability over rolling 7-day periods, completing within 2-hour window.
+**NFR2:** Data sync success rate shall maintain >99% reliability over rolling 7-day periods, completing within scheduled daily window.
 
 **NFR3:** System uptime shall exceed 99% availability (less than 7.2 hours downtime per month) for production environment.
 
-**NFR4:** Total monthly operating costs shall remain under $20 AUD/month, targeting $15/month baseline (VPS + Supabase + domain + services).
+**NFR4:** Total monthly operating costs shall remain under $50 AUD/month, targeting optimal balance of functionality and cost efficiency.
 
-**NFR5:** All data transmission shall use HTTPS/TLS encryption; credentials shall be stored as environment variables with n8n credential encryption.
+**NFR5:** All data transmission shall use HTTPS/TLS encryption; credentials shall be stored securely with proper environment variable management.
 
-**NFR6:** Supabase shall provide encrypted storage at rest (AES-256) for all financial data.
+**NFR6:** Supabase shall provide encrypted storage at rest (AES-256) for all financial and business data with appropriate backup strategies.
 
-**NFR7:** User passwords shall be hashed using bcrypt via Supabase Auth with secure session management using JWT tokens.
+**NFR7:** User authentication shall use industry-standard security practices with bcrypt password hashing and secure JWT token session management.
 
-**NFR8:** The system shall support 20 simultaneous users without performance degradation during dashboard viewing.
+**NFR8:** The system shall support 20 simultaneous users without performance degradation during dashboard viewing and data interaction.
 
-**NFR9:** Database queries for dashboard rendering shall complete in <1 second for most visualizations.
+**NFR9:** Database queries for dashboard rendering shall complete in <2 seconds for standard visualizations, <5 seconds for complex aggregations.
 
-**NFR10:** The platform shall comply with Xero API rate limits (60 requests/minute, 10,000 requests/day) through batching and exponential backoff on 429 errors.
+**NFR10:** The platform shall comply with Xero API rate limits (60 requests/minute, 10,000 requests/day) through intelligent batching and exponential backoff strategies.
 
-**NFR11:** VPS infrastructure shall run Docker Compose orchestration with resource limits (n8n capped at 1.5GB RAM, Superset at 2GB RAM on 4GB VPS minimum).
+**NFR11:** **PydanticAI Integration (Non-Functional Requirement):** The system shall integrate PydanticAI FastAPI microservice for conversational analytics as an enhancement feature that does not impact core BI functionality.
 
-**NFR12:** The codebase shall use monorepo structure with version-controlled n8n workflows, Superset dashboard exports, and infrastructure-as-code for reproducible deployments.
+**NFR12:** **CopilotKit Integration:** The system shall use self-hosted CopilotKit for conversational interface with fallback to custom chat implementation if functionality requirements are not met.
 
-**NFR13:** The system shall implement automated weekly VPS snapshots for disaster recovery with documented restoration procedure.
+**NFR13:** The system shall use AG-UI enterprise components for data-intensive interfaces with Shadcn v4 base components and MCP integration for consistent design system.
 
-**NFR14:** Supabase database schema shall use normalized tables mirroring Xero entities with appropriate indexing for query performance optimization.
+**NFR14:** The codebase shall use monorepo structure with version-controlled workflows, dashboard configurations, and infrastructure-as-code for reproducible deployments.
 
-**NFR15:** The architecture shall support horizontal scaling post-MVP (Supabase Pro upgrade, larger VPS, load balancing) without requiring fundamental refactoring.
+**NFR15:** The architecture shall support horizontal scaling (database upgrade, larger infrastructure, load balancing) without requiring fundamental refactoring.
 
 ---
 
@@ -108,128 +110,111 @@ XeroPulse solves this through a fully open-source ETL architecture: n8n workflow
 
 ### Overall UX Vision
 
-XeroPulse delivers a **clean, professional dashboard portal** that prioritizes clarity and speed over complexity. The UX philosophy centers on "zero-click insights"—users log in and immediately see their role-appropriate dashboards without navigation friction. The interface adopts a **minimal chrome approach**: simple header with logo and user menu, sidebar navigation listing available dashboards, and full-width embedded Superset visualizations as the primary content.
-
-The portal feels like a **professional financial intelligence platform**, not a generic admin panel. Visual hierarchy emphasizes data over decoration, with ample whitespace, clear typography, and subtle animations only where they aid comprehension (loading states, transitions). Users should experience a sense of **trust and confidence**—this is authoritative financial data presented with polish and precision.
-
-**Key UX Principles:**
-- **Immediate value delivery:** Dashboard loads on login (no empty state or "select a dashboard" friction)
-- **Role-aware personalization:** Users never see dashboards they can't access (reduces cognitive load)
-- **Performance transparency:** Loading indicators and "last updated" timestamps manage expectations around 2-hour sync lag
-- **Progressive disclosure:** Simple dashboard list for most users; admin features (user management) tucked behind role-gated menu
+A modern, conversational-first business intelligence portal that combines traditional dashboard viewing with AI-powered data interaction. The interface prioritizes intuitive navigation through AG-UI components while enabling natural language queries about business data through integrated conversational AI capabilities.
 
 ### Key Interaction Paradigms
 
-**1. Dashboard-Centric Navigation**
-- Primary navigation is a vertical sidebar listing dashboard names (e.g., "Income vs Expenses," "AR Aging," "WIP by Team")
-- Active dashboard highlighted; click switches embedded Superset view in main content area
-- No multi-level menus or complex navigation trees—flat structure matches 8-dashboard scope
+**Primary Interactions:**
 
-**2. Embedded Analytics (iframe/SDK)**
-- Superset dashboards render as embedded iframes within Next.js portal
-- Users interact directly with Superset visualizations (date filters, drill-downs, chart interactions) without leaving portal
-- Authentication passed seamlessly from Next.js to Superset (single sign-on experience)
+- **Dashboard Navigation**: Clean, role-based dashboard access through AG-UI card layouts and navigation components
+- **Conversational Analytics**: Natural language queries about financial data using CopilotKit integration with PydanticAI backend
+- **Self-Service Integration**: Guided OAuth flows for Xero account connections with clear status feedback
+- **Progressive Disclosure**: Complex features (admin functions, advanced filters) revealed contextually
 
-**3. Responsive Grid Layouts**
-- Dashboards use Superset's responsive grid system for automatic layout adaptation
-- Desktop (1920px): Multi-column dashboard layouts with side-by-side charts
-- Tablet (1024px): Stacked layouts with preserved chart readability
-- Mobile (phone screens): View-only capability acknowledged as degraded experience for MVP
+**Secondary Interactions:**
 
-**4. Role-Based Conditional Rendering**
-- Middleware checks user role on every page load
-- Sidebar navigation dynamically renders only authorized dashboards
-- Admin menu item appears only for admin role (user management UI)
-
-**5. Minimal User Inputs**
-- No complex forms or data entry—this is a read-only analytics platform
-- Primary inputs: Login form, password reset form, admin user management (add/edit users)
-- Dashboard interactions handled entirely by Superset (date pickers, filters, toggles)
+- **Real-time Collaboration**: CopilotKit enables collaborative data exploration through AI assistance
+- **Responsive Adaptation**: Seamless experience across desktop and tablet devices using AG-UI's responsive grid system
 
 ### Core Screens and Views
 
-**1. Login Screen**
-- Centered card layout with XeroPulse logo, email/password fields, "Forgot Password" link
-- Clean, minimal design—no marketing copy or distractions
-- Error states for invalid credentials displayed inline
+**Authentication Flow:**
 
-**2. Dashboard Home (Post-Login Default View)**
-- User lands on first authorized dashboard automatically
-- Sidebar navigation visible with full dashboard list
-- Header shows user name/email with logout dropdown
+- Modern login/registration using Shadcn v4 components with Supabase Auth
+- Clean, branded authentication forms with proper validation states
 
-**3. Individual Dashboard Views (8 Total)**
-- Full-width embedded Superset dashboard as primary content
-- Breadcrumb or page title indicating current dashboard name
-- "Last updated: [timestamp]" displayed prominently (builds trust around 2-hour sync)
+**Main Dashboard Portal:**
 
-**4. User Management Admin Panel** *(Admin role only)*
-- Table view listing all users with columns: Name, Email, Role, Last Login, Actions (Edit/Delete)
-- "Add User" button opens modal with fields: Email, Role dropdown, auto-generated password
-- Role assignment dropdown: Executive, Manager, Staff (maps to dashboard permissions)
+- AG-UI card-based layout displaying role-appropriate embedded dashboards (Metabase)
+- Integrated conversational AI sidebar/modal for data queries
+- Quick actions toolbar for data refresh, settings access
 
-**5. Password Reset Flow**
-- Email entry screen → Confirmation message → Email with reset link → New password entry screen
-- Standard Supabase Auth flow with minimal custom UI
+**Conversational Analytics Interface:**
 
-**6. Error States**
-- 404 page for invalid routes
-- "Dashboard unavailable" message if Superset sync fails or dashboard not found
-- "Insufficient permissions" page if user attempts to access unauthorized dashboard
+- CopilotKit chat interface for natural language business intelligence queries
+- Contextual data visualization suggestions based on user role and permissions
+- Integration with existing dashboard data for cross-referencing
 
-### Accessibility: WCAG AA
+**Settings & Integration Management:**
 
-**Target:** WCAG 2.1 Level AA compliance (industry standard for enterprise applications)
+- Xero OAuth connection wizard with clear status indicators
+- Admin-only ETL trigger controls and monitoring dashboard
+- User profile and role management (admin view)
 
-**Key Requirements:**
-- Keyboard navigation support (tab order, focus indicators, no mouse-only interactions)
-- Color contrast ratios meet 4.5:1 minimum for text, 3:1 for UI components
-- Alt text for logos/icons; ARIA labels for interactive elements
-- Form validation errors announced to screen readers
-- Responsive text sizing (users can zoom to 200% without breaking layouts)
+### Modern Component Architecture
 
-**Rationale:** Professional services firms may have diverse user needs; AA compliance ensures accessibility without the implementation burden of AAA (which requires 7:1 contrast, sign language videos, etc.).
+**Design System:**
 
-**Assumption:** Superset dashboards inherit accessibility from Superset's default rendering; custom accessibility work limited to Next.js portal UI.
+- **Base**: Shadcn v4 components with MCP integration for consistent, accessible UI patterns
+- **Data Visualization**: AG-UI components for dashboard grids, cards, and navigation elements
+- **Conversational Interface**: CopilotKit React components for AI chat integration
+- **Responsive Framework**: Tailwind CSS with AG-UI's responsive utilities
 
-### Branding
+**Component Strategy:**
 
-**Brand Identity:** Professional, trustworthy, modern financial software aesthetic
+- Leverage Shadcn v4's improved accessibility and performance features
+- Use AG-UI's enterprise-grade components for data-heavy interfaces
+- Implement CopilotKit's self-hosted configuration for data privacy compliance
+- MCP integration for enhanced component interoperability
 
-**Visual Style:**
-- **Color palette:** Deep blues and grays (conveys financial professionalism and trust)
-  - Primary: Deep blue (#1E3A8A or similar) for headers, CTAs, active states
-  - Secondary: Slate gray (#64748B) for body text, borders
-  - Accent: Subtle teal or green for success states, positive metrics
-  - Background: Off-white (#F8FAFC) to reduce eye strain vs. pure white
-- **Typography:**
-  - Headings: Inter or similar geometric sans-serif (modern, clean)
-  - Body: System font stack for performance (SF Pro on macOS, Segoe UI on Windows)
-  - Dashboard text: Inherit from Superset defaults (typically Roboto or Open Sans)
-- **Logo:** "XeroPulse" wordmark with subtle pulse/heartbeat icon element (suggests real-time data flow)
-- **Iconography:** Minimal use of icons; where needed, use Heroicons or Lucide (consistent with modern web apps)
+### Accessibility: WCAG AA+ with Modern Standards
 
-**Assumptions Made:**
-- No existing brand guidelines provided—proposing financial software standard palette
-- Logo does not exist yet—will need design (or use text-only wordmark for MVP)
-- Branding should feel cohesive with Xero's UI (blue/white palette) to signal integration, but distinct enough to be standalone product
+- **Baseline Compliance**: WCAG AA standards for all interactive elements
+- **Enhanced Features**: Keyboard navigation optimized for dashboard and conversational interfaces
+- **Screen Reader Support**: Comprehensive ARIA labels for data visualizations and AI responses
+- **Color Accessibility**: High contrast themes available, colorblind-friendly palette
 
-### Target Device and Platforms: Web Responsive (Desktop/Tablet Primary)
+### Branding & Visual Identity
 
-**Supported Platforms:**
-- **Desktop browsers (primary):** Chrome 100+, Firefox 100+, Safari 15+, Edge 100+ on Windows 10+, macOS 11+, Linux (Ubuntu 20.04+)
-- **Tablet browsers (secondary):** iPad Safari, Android Chrome on 1024px+ tablets
-- **Mobile browsers (degraded experience):** iPhone Safari, Android Chrome—view-only capability, no responsive optimization for MVP
+**Corporate Integration:**
 
-**Screen Size Optimization:**
-- **Desktop (1920px+):** Multi-column dashboard layouts, optimal chart visibility
-- **Laptop (1366-1920px):** Slightly condensed layouts, still comfortable viewing
-- **Tablet (1024-1366px):** Stacked single-column layouts, charts sized for readability
-- **Phone (<1024px):** Basic rendering without layout breaks, but suboptimal experience (small charts, horizontal scrolling possible)
+- Consistent branding with existing internal tools and corporate identity
+- Professional color scheme suitable for financial data presentation
+- Clean typography hierarchy optimized for data readability
 
-**Rationale:** Professional services users primarily work on desktop/laptop during business hours; mobile optimization deferred to Phase 2 (Month 5 per roadmap).
+**Modern Aesthetics:**
 
-**Deployment:** Web application only (no native mobile apps, no desktop Electron app)
+- Contemporary design language balancing professionalism with approachability
+- Subtle animations and transitions for enhanced user experience
+- Dark/light theme support for user preference accommodation
+
+### Target Devices & Platform Support
+
+**Primary Targets:**
+
+- **Desktop Browsers**: Optimized for 1920x1080+ displays with full feature access
+- **Tablet Devices**: Responsive adaptation maintaining core functionality on iPad Pro and similar devices
+- **Browser Support**: Modern browsers (Chrome 90+, Firefox 88+, Safari 14+, Edge 90+)
+
+**Platform Considerations:**
+
+- Progressive Web App capabilities for offline dashboard caching
+- Touch-friendly interactions for tablet usage
+- Keyboard shortcuts for power users navigating multiple dashboards
+
+### Conversational AI Integration
+
+**AI Interface Design:**
+
+- Non-intrusive chat interface that complements rather than competes with dashboards
+- Context-aware suggestions based on current dashboard view and user role
+- Clear indication of AI capabilities and limitations
+
+**Data Query Experience:**
+
+- Natural language processing for business intelligence questions
+- Visual response formatting (charts, tables) generated through PydanticAI integration
+- Conversation history and saved queries for repeated analysis patterns
 
 ---
 
@@ -237,209 +222,279 @@ The portal feels like a **professional financial intelligence platform**, not a 
 
 ### Repository Structure: Monorepo
 
-**Decision:** Single Git repository containing all XeroPulse components.
+The project will use a monorepo structure with Next.js App Router, containing the main application, API routes, and supporting configurations in a single repository for streamlined development and deployment.
 
-**Structure:**
-```
-xeropulse/
-├── apps/
-│   ├── web/                 # Next.js web portal
-│   ├── n8n-workflows/       # n8n workflow JSON exports (version control)
-│   ├── superset-config/     # Superset dashboard exports, configuration
-├── docs/                    # Architecture diagrams, deployment guides, user docs
-├── infrastructure/          # Docker Compose files, deployment scripts, VPS setup
-├── .bmad-core/             # BMAD agent configurations and templates
-└── README.md
-```
+### Service Architecture: Hybrid (Frontend Monolith + Microservice AI Backend)
 
-**Rationale:**
-- **Team coordination:** Simpler for 1-2 developer team—all XeroPulse code in one place
-- **Version control:** Changes to portal, workflows, and dashboards tracked together (easier rollbacks)
-- **Deployment sync:** Infrastructure-as-code ensures reproducible deployments across environments
-- **Documentation proximity:** Architecture docs live alongside code they describe
+- **Frontend**: Next.js application serving as the primary user interface and dashboard portal
+- **AI Backend**: Separate PydanticAI FastAPI microservice for conversational analytics (deployed as NFR)
+- **Database & Auth**: Supabase PostgreSQL with Row Level Security and authentication
+- **ETL Pipeline**: n8n for primary data extraction and transformation workflows
+- **BI Engine**: Metabase for embedded dashboard generation and data visualization
 
-**Alternative Considered:** Polyrepo (separate repos for web, workflows, infrastructure)
-- **Rejected because:** Adds coordination overhead for small team; cross-component changes require multiple PRs
+### Testing Requirements: Comprehensive Multi-Layer Testing
 
-### Service Architecture
+- **Unit Testing**: Jest + React Testing Library for component and utility function testing
+- **Integration Testing**: API route testing with Next.js test utilities and Supabase client mocking
+- **E2E Testing**: Playwright for critical user journeys (authentication, dashboard access, Xero OAuth)
+- **AI Testing**: Separate test suite for PydanticAI conversational interface validation
 
-**Decision:** Distributed services architecture with self-hosted components coordinated via Docker Compose on single VPS.
+### Frontend Technology Stack
 
-**Architecture Pattern:**
-```
-┌─────────────┐      OAuth2       ┌──────────┐
-│  Xero API   │◄─────────────────►│   n8n    │ (VPS)
-│  XPM API    │                   └────┬─────┘
-│ Suntax API  │                        │ ETL (every 2hrs)
-└─────────────┘                        ▼
-┌─────────────┐                   ┌──────────┐
-│   Users     │◄──────Auth────────│ Supabase │ (Cloud)
-│ (Browsers)  │                   │ (DB+Auth)│
-└──────┬──────┘                   └────┬─────┘
-       │                               │
-       │ HTTPS                         │ SQL Queries
-       ▼                               ▼
-┌─────────────┐    iframe embed   ┌──────────┐
-│  Next.js    │◄─────────────────►│ Superset │ (VPS)
-│   Portal    │  (Vercel Cloud)   │Dashboard │
-└─────────────┘                   └──────────┘
-```
+- **Framework**: Next.js 14+ with App Router for modern React development patterns
+- **UI Components**:
+  - **Primary**: AG-UI enterprise components for data-intensive dashboard interfaces
+  - **Base**: Shadcn v4 components with MCP integration for consistent design system
+- **Styling**: Tailwind CSS with AG-UI's utility extensions and custom design tokens
+- **State Management**: React Server Components + client-side React Context for complex state
+- **Type Safety**: TypeScript 5+ with strict configuration for enhanced developer experience
 
-**Components:**
-- **ETL Layer:** n8n (self-hosted on VPS) - Workflow automation, API orchestration
-- **Data Layer:** Supabase (cloud managed) - PostgreSQL database + authentication
-- **BI Layer:** Apache Superset (self-hosted on VPS) - Dashboard engine
-- **Presentation Layer:** Next.js 15 (Vercel cloud) - User-facing web portal
+### Backend & Data Architecture
 
-**Rationale:**
-- **Hybrid cloud approach:** Balances cost (self-hosted n8n/Superset) with reliability (managed Supabase/Vercel)
-- **Not microservices:** Single VPS runs multiple services via Docker Compose (sufficient for 20 users, simpler ops)
-- **Not serverless:** ETL requires stateful workflows, long-running syncs incompatible with FaaS time limits
-- **Scalability path:** Each component upgrades independently (Supabase → Pro, larger VPS, Vercel → Pro) without refactoring
+- **Database**: Supabase PostgreSQL with Row Level Security (RLS) for role-based data access
+- **Authentication**: Supabase Auth with OAuth providers and session management
+- **API Layer**: Next.js API Routes for frontend-backend communication and proxy endpoints
+- **Real-time Features**: Supabase Realtime for live dashboard updates and collaboration features
 
-**Technology Stack Details:**
+### Conversational AI Integration (NFR Implementation)
 
-**Frontend:**
-- **Next.js 15** (App Router, React 19, Server Components)
-  - *Rationale:* Latest stable version (12+ months old by October 2025 project start), better performance, longer support window, improved caching and async APIs
-- **Tailwind CSS** (utility-first styling)
-- **shadcn/ui** (accessible component library, Next.js 15 compatible)
-- **Supabase Auth Client** (authentication integration)
+- **AI Service**: PydanticAI FastAPI microservice deployed separately from main application
+- **Communication**: REST API integration between Next.js frontend and PydanticAI backend
+- **Chat Interface**:
+  - **Primary**: Self-hosted CopilotKit for conversational UI components
+  - **Fallback**: Custom chat implementation if CopilotKit doesn't meet functionality requirements
+- **Data Privacy**: AI queries processed through internal infrastructure, no external AI service dependencies
 
-**Backend/Database:**
-- **Supabase** (PostgreSQL 14+ with Auth service)
-- **n8n** (workflow automation, self-hosted)
-- **Apache Superset** (BI platform, self-hosted)
+### ETL & Data Pipeline
 
-**Infrastructure:**
-- **VPS:** Hetzner Cloud (€4.51/month = ~$7.50 AUD, 4GB RAM minimum) or DigitalOcean ($12/month)
-  - *Alternative Considered:* **GCP (Google Cloud Platform)** - Rejected due to 3-6x higher cost ($45-65/month vs $10-20/month), see "Cloud Provider Comparison" below
-- **Container Orchestration:** Docker Compose (n8n + Superset on single VPS)
-- **CDN/DNS:** Cloudflare (free tier)
-- **SSL/TLS:** Let's Encrypt (free automated certificates)
-- **Next.js Hosting:** Vercel free tier (100GB bandwidth/month, 100 serverless invocations/day)
+- **Primary ETL**: n8n workflows for Xero API data extraction and transformation
+- **Scheduling**: n8n's built-in cron scheduling for automated daily data pipeline execution
+- **Data Flow**: Xero API → n8n transformation → Supabase PostgreSQL → Metabase dashboards
+- **Monitoring**: n8n workflow execution logs and Supabase database monitoring
 
-**API Integrations:**
-- **Xero API:** OAuth2 authentication, invoices, contacts, transactions, payments, accounts, budgets
-- **XPM/Workflow Max API:** OAuth2/API key, jobs, time entries, costs, billable rates, WIP
-- **Suntax API:** TBD (pending API availability confirmation)
+### Business Intelligence & Visualization
 
-### Testing Requirements
+- **BI Platform**: Metabase for embedded dashboard creation and data visualization
+- **Dashboard Embedding**: Metabase iframe integration with authentication passthrough
+- **Data Sources**: Direct connection from Metabase to Supabase PostgreSQL database
+- **Role-Based Access**: Metabase permissions aligned with Supabase RLS policies
 
-**Decision:** Unit + Integration testing with manual UAT; E2E testing deferred to post-MVP.
+### External Integrations
 
-**Testing Strategy:**
+- **Primary Data Sources**:
+  - Xero API (OAuth 2.0) for financial data extraction
+  - Workflow Max / XPM (V2 API when available) for project management data
+- **OAuth Management**: Server-side token handling through Next.js API routes with secure storage
+- **API Rate Limiting**: Implemented at application level to respect external service limits
 
-**Unit Testing:**
-- **Next.js components:** React Testing Library + Jest for critical auth/navigation components
-- **API routes:** Jest for Next.js API endpoint testing (if custom endpoints created)
-- **Scope:** Focus on authentication flows, role-based rendering logic, error boundaries
-- **Coverage target:** 60%+ for custom code (excluding third-party components)
+### Deployment & Infrastructure
 
-**Integration Testing:**
-- **ETL workflows:** Manual testing of n8n workflows in Week 1-2 (Xero → Supabase data flow)
-- **Dashboard rendering:** Manual verification that Superset queries return correct data
-- **Authentication flow:** Test Supabase Auth → Next.js → Superset token passing
-- **No automated integration tests for MVP** (time constraint; manual testing sufficient for 20-user internal deployment)
+- **Frontend Hosting**: Vercel for Next.js application deployment with edge functions
+- **AI Backend Hosting**: Separate deployment (Docker container) for PydanticAI FastAPI service
+- **Database**: Supabase managed PostgreSQL with automatic backups and scaling
+- **ETL Infrastructure**: n8n cloud or self-hosted instance based on data sensitivity requirements
+- **BI Infrastructure**: Metabase cloud or self-hosted deployment integrated with Supabase
 
-**User Acceptance Testing (Week 4):**
-- **Participants:** 5+ representative users (executives, managers, staff roles)
-- **Scenarios:** Login, navigate dashboards, verify data accuracy, test role permissions
-- **Format:** Live sessions with test script, feedback collection
-- **Success criteria:** 80%+ users rate dashboards "useful" or "very useful"
+### Development & Quality Assurance
 
-**Manual Testing Conveniences:**
-- **Test users:** Pre-seeded Supabase database with test accounts for each role
-- **Test data:** Sample Xero data loaded for dashboard development (Week 2)
-- **Docker dev environment:** Local Docker Compose setup for n8n/Superset testing before VPS deployment
+- **Development Environment**: Local development with Docker Compose for service orchestration
+- **Code Quality**: ESLint + Prettier for code formatting, Husky for pre-commit hooks
+- **Type Checking**: TypeScript strict mode with path mapping and barrel exports
+- **Performance Monitoring**: Next.js built-in analytics and Core Web Vitals tracking
+- **Security**: OWASP guidelines implementation, dependency scanning, and security headers
 
-**E2E Testing (Post-MVP):**
-- **Deferred to Month 2:** Playwright or Cypress for end-to-end user flows
-- **Rationale:** 4-week timeline prioritizes functional delivery over test automation; internal deployment reduces risk of skipping E2E initially
+### Data Governance & Privacy
 
-**Monitoring/Observability:**
-- **n8n execution logs:** Track sync success/failure rates
-- **Superset query logs:** Monitor dashboard load performance
-- **Vercel analytics:** Track portal page load times
-- **VPS monitoring:** CPU/RAM/disk usage alerts (Docker stats, simple monitoring script)
+- **Data Protection**: All financial data processed and stored within controlled infrastructure
+- **Access Control**: Multi-layered security with Supabase RLS, role-based UI rendering, and API authentication
+- **Audit Logging**: Comprehensive logging of data access and user actions for compliance
+- **Backup Strategy**: Automated daily backups with point-in-time recovery capabilities
 
-### Additional Technical Assumptions and Requests
+### Scalability Considerations
 
-**Database Design:**
-- **Schema:** Normalized tables mirroring Xero/XPM entities (invoices, line_items, contacts, jobs, time_entries, etc.)
-- **Indexing:** Primary keys + indexes on frequently filtered fields (contact_id, date ranges, status fields)
-- **Data retention:** All historical data preserved (no automatic purging); manual cleanup if approaching 500MB Supabase limit
-- **Migrations:** Supabase migration files version-controlled in monorepo
-
-**Security & Compliance:**
-- **Data encryption at rest:** Supabase AES-256 (managed)
-- **Data encryption in transit:** HTTPS/TLS for all communications (Let's Encrypt)
-- **Credential management:** Environment variables (never committed to Git), n8n credential encryption
-- **Row-Level Security:** Supabase RLS policies for database access control (if needed beyond app-level auth)
-- **Password hashing:** bcrypt via Supabase Auth
-- **Session management:** JWT tokens with configurable expiration
-- **Data residency:** Supabase region selection (AU/NZ preferred for Australian data sovereignty if required)
-- **Backup strategy:** Supabase daily automated backups (7-day retention on free tier), weekly VPS snapshots
-
-**Performance Optimization:**
-- **Database queries:** SQL aggregations in Supabase (not Python post-processing in Superset)
-- **Superset caching:** Enable query result caching to reduce DB load
-- **Docker resource limits:** n8n capped at 1.5GB RAM, Superset at 2GB RAM (prevents resource starvation on 4GB VPS)
-- **CDN:** Cloudflare for static asset caching (Next.js images, CSS, JS)
-
-**API Rate Limit Handling:**
-- **Xero limits:** 60 req/min, 10,000 req/day
-- **Strategy:** Batch requests (fetch 100 records per call), exponential backoff on 429 errors, 2-hour sync designed to stay within limits
-- **Monitoring:** n8n workflow logs track rate limit errors
-
-**Development Workflow:**
-- **Local development:** Docker Compose for n8n/Superset, Supabase cloud for DB (shared dev instance), Next.js local dev server
-- **Version control:** Git with feature branches, PR reviews for production changes
-- **Deployment:** Manual deployment for MVP (SSH to VPS, docker-compose pull/up); CI/CD deferred to Month 2
-- **Environment management:** `.env` files for local, environment variables on VPS/Vercel for production
-
-**Cloud Provider Comparison (VPS vs GCP):**
-
-| Factor | VPS (Hetzner/DigitalOcean) | GCP (Google Cloud Platform) | Decision |
-|--------|---------------------------|----------------------------|----------|
-| **Monthly Cost** | $10-20 AUD | $45-65 AUD | **VPS** |
-| **Predictability** | Flat rate | Usage-based (egress charges) | **VPS** |
-| **Setup Complexity** | Simple (SSH + Docker) | Moderate (multiple services, IAM) | **VPS** |
-| **Monitoring** | Basic (Docker logs, manual) | Advanced (Cloud Monitoring built-in) | **GCP** |
-| **Auto-scaling** | Manual VM resize | Cloud Run, autoscaling VMs | **GCP** |
-| **Vendor Lock-in** | Low (Docker Compose portable) | Moderate (GCP-specific services) | **VPS** |
-| **Sufficient for 20 users?** | ✅ Yes | ✅ Yes (but overkill) | **VPS** |
-
-**Decision: VPS (Hetzner preferred at €4.51/month, DigitalOcean fallback at $12/month)**
-
-**Rationale:**
-- **Cost alignment:** VPS hits $15/month target; GCP would be 3-6x over budget
-- **Simplicity:** Docker Compose on single VM vs. orchestrating Cloud Run, Cloud SQL, Compute Engine
-- **Predictable billing:** No surprise egress charges (VPS includes 4-20TB bandwidth)
-- **MVP-appropriate:** GCP's power (auto-scaling, multi-region) not needed for 20-user internal tool
-- **Project Brief constraint:** Budget limit ($200 max, $15 target) drives VPS choice
-
-**GCP Reconsidered If:**
-- Scale exceeds 100+ users (auto-scaling valuable)
-- Need BigQuery integration for advanced analytics
-- Enterprise security requirements (VPC Service Controls, Cloud Armor)
-- Operating budget increases to $100-200/month (GCP benefits justify cost)
+- **Frontend Scaling**: Vercel's edge network and CDN for global performance
+- **Database Scaling**: Supabase's automatic scaling with read replicas for heavy dashboard queries
+- **ETL Scaling**: n8n horizontal scaling for increased data processing volumes
+- **AI Scaling**: Independent PydanticAI service scaling based on conversational query volume
 
 ---
 
 ## Epic List
 
-### Epic 1: Foundation & Data Pipeline Infrastructure
-*Goal:* Establish VPS infrastructure, deploy n8n and Superset, integrate Xero API with automated 2-hour sync to Supabase, implement basic authentication, and deliver first production dashboard (Income vs Expenses) to prove end-to-end technical stack.
+Based on the comprehensive analysis of requirements and the unified Next.js + AG-UI + CopilotKit + PydanticAI + Supabase + n8n + Metabase architecture, here are the strategic development phases:
 
-### Epic 2: MVP Dashboard Suite & Portal Launch
-*Goal:* Complete remaining 2 MVP dashboards (Monthly Invoicing to Budget, Debtors/AR Aging), build Next.js role-based portal with embedded Superset visualizations, implement user management system, onboard 20 users, and launch production platform by October 31, 2025.
+### Epic 1: Foundation & Authentication Infrastructure
 
-### Epic 3: Complete Dashboard Suite with XPM Integration
-*Goal:* Integrate XPM/Workflow Max API for practice management data, build remaining 5 dashboards (YTD/MTD View, Work In Progress by Team, ATO Lodgment Status, Services Analysis, Client Recoverability), enhance authentication with admin panel and security hardening, and deliver complete 8-dashboard platform.
+**Epic Goal**: Establish the core Next.js application foundation with Supabase authentication, role-based access control, and basic dashboard framework using AG-UI components.
 
-### Epic 4: Platform Refinement & Advanced Features
-*Goal:* Optimize dashboard performance based on user feedback, implement data export capabilities, add mobile-responsive views, explore real-time sync via webhooks, establish staging environment, and iterate based on measured success metrics (adoption, time savings, user satisfaction).
+**Key Deliverables**:
+
+- Next.js 14+ App Router application setup with TypeScript
+- Supabase integration (auth, database, RLS policies)
+- AG-UI component library integration with Shadcn v4 base components
+- Role-based authentication system (Admin, Role A, Role B)
+- Basic dashboard shell with iframe embedding capability
+
+**Strategic Priority**: P0 (Critical Path) - All subsequent epics depend on this foundation
+
+### Epic 2: Xero Integration & ETL Pipeline
+
+**Epic Goal**: Implement comprehensive Xero data extraction using n8n workflows, establish automated data pipeline to Supabase, and create secure OAuth management for user connections.
+
+**Key Deliverables**:
+
+- n8n workflow configuration for Xero API data extraction
+- Supabase database schema for financial data storage
+- Next.js API routes for secure Xero OAuth token management
+- Automated daily ETL scheduling and monitoring
+- Self-service Xero account connection interface
+
+**Strategic Priority**: P0 (Critical Path) - Required for all business intelligence functionality
+
+### Epic 3: Metabase Integration & Core Dashboards
+
+**Epic Goal**: Deploy and configure Metabase for embedded BI capabilities, create role-specific financial dashboards, and implement secure dashboard embedding with authentication passthrough.
+
+**Key Deliverables**:
+
+- Metabase deployment and Supabase database connection
+- Core financial dashboards: Income vs Expenses, Monthly Invoicing to Budget, YTD/MTD Budget views
+- Role-based dashboard permissions aligned with Supabase RLS
+- Secure iframe embedding with authentication integration
+- Dashboard loading states and error handling
+
+**Strategic Priority**: P0 (Core Business Value) - Primary user-facing functionality
+
+### Epic 4: Conversational AI Integration (NFR)
+
+**Epic Goal**: Deploy PydanticAI FastAPI microservice and integrate conversational analytics capabilities through CopilotKit interface, enabling natural language queries about business data.
+
+**Key Deliverables**:
+
+- PydanticAI FastAPI service deployment (separate infrastructure)
+- CopilotKit self-hosted integration (with fallback to custom chat UI)
+- Natural language query processing for financial data
+- Conversational interface integrated with existing dashboard views
+- AI query history and context management
+
+**Strategic Priority**: P1 (Value Enhancement) - Non-functional requirement that enhances user experience
+
+### Epic 5: Advanced Analytics & Workflow Max Integration
+
+**Epic Goal**: Integrate Workflow Max/XPM data sources (when V2 API available), implement advanced financial analytics, and create comprehensive WIP (Work in Progress) dashboards.
+
+**Key Deliverables**:
+
+- Workflow Max V2 API integration through n8n workflows
+- WIP data extraction and transformation pipeline
+- Advanced financial analytics dashboards (aging analysis, project profitability)
+- Cross-platform data correlation and insights
+- Enhanced reporting capabilities for leadership
+
+**Strategic Priority**: P1 (Business Expansion) - Dependent on vendor API availability
+
+### Epic 6: Platform Optimization & Advanced Features
+
+**Epic Goal**: Implement performance optimizations, advanced user management, comprehensive monitoring and alerting, and prepare for production scaling.
+
+**Key Deliverables**:
+
+- Performance optimization (caching, lazy loading, CDN)
+- Advanced user management and role administration
+- Comprehensive monitoring and alerting systems
+- Data backup and disaster recovery procedures
+- Advanced security hardening and compliance features
+
+**Strategic Priority**: P2 (Operational Excellence) - Production readiness and scalability
+
+## Epic Sequencing Strategy
+
+**Phase 1 (MVP Core - 8-10 weeks):**
+
+- Epic 1: Foundation & Authentication Infrastructure (3 weeks)
+- Epic 2: Xero Integration & ETL Pipeline (3 weeks)
+- Epic 3: Metabase Integration & Core Dashboards (2-4 weeks)
+
+**Phase 2 (Enhanced Capabilities - 4-6 weeks):**
+
+- Epic 4: Conversational AI Integration (4-6 weeks, parallel development)
+
+**Phase 3 (Advanced Features - 6-8 weeks):**
+
+- Epic 5: Advanced Analytics & Workflow Max Integration (4-6 weeks)
+- Epic 6: Platform Optimization & Advanced Features (2-4 weeks)
+
+**Risk Mitigation Notes:**
+
+- Epic 4 (AI Integration) is designed as NFR to avoid blocking core BI functionality
+- Epic 5 has external dependency on Workflow Max V2 API availability
+- Parallel development tracks enable faster delivery of core value while building advanced features
+
+## Next Steps
+
+### Immediate Development Priorities
+
+1. **Epic 1 Kickoff** (Weeks 1-3): Begin Next.js foundation setup with Supabase integration
+2. **Architecture Validation** (Week 1): Validate AG-UI + Shadcn v4 integration approach through prototyping
+3. **n8n Environment Setup** (Week 2): Establish n8n development environment for Xero integration planning
+4. **Stakeholder Alignment** (Week 1): Final review and approval of technical architecture decisions
+
+### Success Metrics & KPIs
+
+**Technical Metrics:**
+
+- Application performance: <2.5s First Contentful Paint
+- Authentication success rate: >99.5%
+- ETL pipeline uptime: >99% daily execution success
+- Dashboard load time: <5s for embedded Metabase reports
+
+**Business Metrics:**
+
+- User adoption: 100% of 20 team members actively using portal within 30 days
+- Data freshness: Financial data updated daily with <24h latency
+- Security compliance: Zero unauthorized access incidents
+- User satisfaction: >4.5/5 rating in post-deployment survey
+
+### Risk Mitigation & Contingency Planning
+
+**High-Priority Risks:**
+
+1. **AG-UI Integration Complexity**: Prototype early, maintain Shadcn v4 fallback option
+2. **Xero API Rate Limits**: Implement intelligent batching and caching strategies
+3. **PydanticAI Performance**: Design as NFR with graceful degradation if service unavailable
+4. **Metabase Licensing**: Validate enterprise features needed vs. open-source capabilities
+
+**Contingency Plans:**
+
+- Component Library Fallback: Pure Shadcn v4 implementation if AG-UI integration fails
+- ETL Backup: Manual CSV import process for critical business continuity
+- AI Graceful Degradation: Traditional dashboard-only interface if conversational features fail
+
+## Conclusion
+
+This comprehensive PRD establishes a clear roadmap for transforming XeroPulse into a modern, conversational analytics platform. The unified architecture combining Next.js + AG-UI + CopilotKit + PydanticAI + Supabase + n8n + Metabase provides:
+
+**Immediate Business Value:**
+
+- Centralized, secure access to financial dashboards for all 20 team members
+- Automated daily data pipeline eliminating manual reporting overhead
+- Role-based security ensuring appropriate data access governance
+
+**Strategic Platform Capabilities:**
+
+- Conversational AI interface enabling natural language business intelligence queries
+- Scalable architecture supporting future integration with additional data sources
+- Modern development foundation enabling rapid feature delivery and iteration
+
+**Technical Excellence:**
+
+- Enterprise-grade component library supporting complex data visualization requirements
+- Comprehensive security model with multiple layers of access control
+- Performance-optimized architecture ensuring sub-3-second load times
+
+The phased delivery approach ensures immediate ROI through core BI functionality while building toward advanced conversational analytics capabilities that will differentiate the platform and enhance user productivity.
+
+**Project Readiness:** This PRD provides the comprehensive foundation required to begin immediate development, with clear technical specifications, detailed user stories, and strategic risk mitigation approaches.
 
 ---
 
