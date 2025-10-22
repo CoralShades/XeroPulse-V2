@@ -40,6 +40,14 @@ build/
 *.pyc
 __pycache__/
 
+# Next.js
+.next/
+out/
+next-env.d.ts
+
+# Vercel
+.vercel/
+
 # Secrets
 *.pem
 *.key

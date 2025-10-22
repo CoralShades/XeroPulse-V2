@@ -6,7 +6,15 @@
       "Bash(powershell:*)",
       "Bash(md-tree explode:*)",
       "Bash(./doctor:*)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(npx create-next-app@latest . --example with-supabase --use-npm)",
+      "Read(//d/ailocal/**)",
+      "Bash(cat:*)",
+      "Bash(timeout 15 npm run dev:*)",
+      "Bash(npm install:*)",
+      "Bash(npx shadcn@latest add:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm run build:*)"
     ],
     "deny": [],
     "ask": []
