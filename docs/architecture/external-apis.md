@@ -7,8 +7,8 @@ XeroPulse integrates with three primary external APIs to deliver comprehensive f
 ### Xero Accounting API Integration
 
 **API Version & Endpoint**
-- Xero API v3.0 (current stable version)
-- Base URL: `https://api.xero.com/api.xro/3.0/`
+- Xero API v2.0 (current stable version)
+- Base URL: `https://api.xero.com/api.xro/2.0/`
 - Authentication: OAuth 2.0 with PKCE flow
 - Rate Limits: 10,000 API calls per day, 5 calls per second
 
@@ -128,8 +128,8 @@ class XeroAPIHandler:
 ### XPM Practice Management API Integration
 
 **API Version & Endpoint**
-- XPM API v2 (latest available)
-- Base URL: `https://api.xpmpracticemanager.com/v2/`
+- XPM API v3.1 (latest available)
+- Base URL: `https://api.xpmpracticemanager.com/v3.1/`
 - Authentication: API Key + Basic Auth
 - Rate Limits: 1,000 requests per hour per API key
 
@@ -405,7 +405,7 @@ class APIHealthMonitor:
 
 ### Detailed Rationale
 
-**API Selection Strategy**: Xero API v3.0 chosen for stability and comprehensive endpoint coverage. XPM API v2 is the only available version for project management data. Metabase API selected for programmatic dashboard management and signed embedding capabilities.
+**API Selection Strategy**: Xero API v2.0 chosen for stability and comprehensive endpoint coverage. XPM API v3.1 is the current version for project management data. Metabase API selected for programmatic dashboard management and signed embedding capabilities.
 
 **Authentication Patterns**: OAuth 2.0 with PKCE for Xero provides secure, user-authorized access without storing credentials. XPM API key authentication is simpler but requires secure key management. Metabase signed embedding eliminates need for user authentication while maintaining security.
 
@@ -415,10 +415,414 @@ class APIHealthMonitor:
 
 **Error Handling Philosophy**: Circuit breaker patterns prevent cascade failures when external APIs are down. Graceful degradation allows dashboard viewing even when sync is temporarily unavailable.
 
-**Key Assumptions**: Xero API rate limits remain at current levels (10k/day). XPM API v3 will maintain backward compatibility when available. Metabase signed embedding supports row-level security parameters. Webhook delivery from external APIs is reliable but not guaranteed.
+**Key Assumptions**: Xero API rate limits remain at current levels (10k/day). XPM API v3.1 will maintain backward compatibility. Metabase signed embedding supports row-level security parameters. Webhook delivery from external APIs is reliable but not guaranteed.
 
 **Validation Needs**: Load testing with realistic API call volumes to validate rate limiting. Webhook reliability testing with simulated failures. Security testing of signed embed URLs. Integration testing with actual Xero/XPM sandbox environments.
 
 ---
-Perfect! Continuing to the **Core Workflows** section.
+
+## Dashboard-Specific API Endpoint Mappings
+
+### Dashboard 1: Income vs Expenses
+
+**Data Requirements**: Weekly income bars + 52-week rolling averages for wages and expenses
+
+**Xero API Endpoints**:
+
+```yaml
+Income (Blue Bars):
+  Endpoint: GET /api.xro/2.0/Payments
+  Parameters:
+    where: "Status=='AUTHORISED' AND PaymentType=='ACCRECPAYMENT'"
+    page: 1 (paginate as needed)
+  Transformation:
+    - Filter accounts receivable payments
+    - Group by week using Date field
+    - Sum Amount per week
+  ETL Frequency: Every 2 hours
+  ETL Pattern: Incremental (ModifiedAfter parameter)
+
+Wages Rolling Average (Yellow Line):
+  Endpoint: GET /api.xro/2.0/Reports/ProfitAndLoss
+  Parameters:
+    fromDate: YYYY-MM-DD (52 weeks ago)
+    toDate: YYYY-MM-DD (current date)
+    timeframe: WEEK
+    periods: 1
+  Account Code: 500 (Wages and Salaries)
+  Transformation:
+    - Extract "Wages and Salaries" rows
+    - Calculate 52-week rolling average using window function
+    - Formula: AVG(Amount) OVER (ORDER BY week ROWS BETWEEN 51 PRECEDING AND CURRENT ROW)
+  ETL Frequency: Every 2 hours
+  ETL Pattern: Full refresh (report-based)
+
+Expenses Rolling Average (Gray Line):
+  Endpoint: GET /api.xro/2.0/Reports/ProfitAndLoss
+  Parameters: Same as Wages
+  Account Codes: Total Cost of Sales + Total Operating Expenses
+  Transformation:
+    - Sum "Total Cost of Sales" + "Total Operating Expenses"
+    - Apply same 52-week rolling average
+  ETL Frequency: Every 2 hours
+  ETL Pattern: Full refresh (report-based)
+```
+
+---
+
+### Dashboard 2: Monthly Invoicing to Budget
+
+**Data Requirements**: Monthly actual vs budget comparison with variance
+
+**Xero API Endpoints**:
+
+```yaml
+Actual Invoicing (Orange Bars):
+  Endpoint: GET /api.xro/2.0/Payments
+  Parameters:
+    where: "PaymentType=='ACCRECPAYMENT' AND Status=='AUTHORISED'"
+  Transformation:
+    - Group by month using Date field
+    - Sum Amount per month
+  ETL Frequency: Every 2 hours
+  ETL Pattern: Incremental sync
+
+Budget Targets (Blue Bars):
+  Endpoint: GET /api.xro/2.0/Reports/BudgetSummary
+  Parameters:
+    budgetID: (optional - use default budget)
+    periods: 12
+  Transformation:
+    - Extract "Service Revenue" or "Total Trading Income" budget line
+    - Expand nested Amounts table (Date, Amount)
+    - Return 12 months of budget values
+  ETL Frequency: Daily
+  ETL Pattern: Full refresh (budgets change infrequently)
+
+Variance Calculation:
+  Formula: ((Actual - Budget) / Budget) × 100
+  Color Coding: Green if Actual > Budget, Red if under
+```
+
+---
+
+### Dashboard 4: Work In Progress by Team
+
+**Data Requirements**: WIP by team with aging, unbilled time/costs, progress invoices
+
+**XPM API Endpoints**:
+
+```yaml
+Jobs List:
+  Endpoint: GET /practicemanager/3.1/job.api/list
+  Additional: GET /practicemanager/3.1/job.api/get/{jobNumber}
+  Filter: status IN ('In Progress', 'Active')
+  Key Fields:
+    - jobNumber: Unique identifier
+    - clientUuid: Link to client
+    - startDate: For aging calculation
+  ETL Frequency: Every 2 hours
+  ETL Pattern: Incremental sync
+
+Time Entries (Unbilled):
+  Endpoint: GET /practicemanager/3.1/time.api/list?from=YYYYMMDD&to=YYYYMMDD
+  Alternative: GET /practicemanager/3.1/time.api/job/{jobNumber}
+  Filter: billable==true AND not invoiced
+  Key Fields:
+    - jobUuid: Link to job
+    - chargeAmount: Billable value (hours × rate)
+    - minutes: Hours worked
+    - staffUuid: Staff member
+  Transformation:
+    - Sum chargeAmount by jobUuid = "Time $"
+  ETL Frequency: Every 2 hours
+  ETL Pattern: Incremental (from last sync date)
+
+Costs/Disbursements:
+  Endpoint: GET /practicemanager/3.1/cost.api/list
+  Filter: billable==true AND not invoiced
+  Key Fields:
+    - jobUuid: Link to job
+    - amount: Disbursement value
+  Transformation:
+    - Sum amount by jobUuid = "Disbursements"
+  ETL Frequency: Every 2 hours
+  ETL Pattern: Incremental
+
+Progress Invoices (Interims):
+  Endpoint: GET /practicemanager/3.1/invoice.api/list
+  Filter: type=='progress' OR type=='interim'
+  Key Fields:
+    - jobUuid: Link to job
+    - amount: Invoice amount
+  Transformation:
+    - Sum amount by jobUuid = "Interims"
+  ETL Frequency: Every 2 hours
+  ETL Pattern: Incremental
+
+Staff/Team Data:
+  Endpoint: GET /practicemanager/3.1/staff.api/list
+  Key Fields:
+    - uuid: Staff ID
+    - name: Staff name
+    - team: Custom field or department (Accounting, Bookkeeping, SMSF, Support Hub)
+  ETL Frequency: Daily
+  ETL Pattern: Full refresh
+
+WIP Calculation:
+  Formula: (Time Value + Billable Costs) - Progress Invoices
+
+Aging Calculation:
+  Formula: CURRENT_DATE - MIN(Time Entry Date, Job Start Date)
+  Buckets: <30, 31-60, 61-90, 90+ days
+```
+
+---
+
+### Dashboard 6: Services Analysis
+
+**Data Requirements**: Service profitability, time added, invoiced amounts, charge rates
+
+**XPM API Endpoints**:
+
+```yaml
+Time Entries by Service:
+  Endpoint: GET /practicemanager/3.1/time.api/list?from=YYYYMMDD&to=YYYYMMDD
+  Filter: billable==true
+  Key Fields:
+    - chargeAmount: Time Added $
+    - minutes: Time (Hours) = minutes/60
+    - taskUuid: Link to task for service categorization
+  Transformation:
+    - Join to Tasks to get service type
+    - Sum chargeAmount by service_type = "Time Added $"
+    - Sum minutes/60 by service_type = "Time (Hours)"
+  ETL Frequency: Every 2 hours
+  ETL Pattern: Incremental
+
+Task/Category Mapping:
+  Endpoint: GET /practicemanager/3.1/task.api/list
+  Additional: GET /practicemanager/3.1/category.api/list
+  Service Type Taxonomy:
+    - EOFY Financials & Tax Returns
+    - SMSF Financials & Tax Return
+    - Bookkeeping
+    - ITR, BAS, Advisory, ASIC, FBT, Tax Planning
+  Transformation:
+    - Create lookup table mapping XPM task codes to service types
+    - Store in service_type_mappings table
+  ETL Frequency: Daily
+  ETL Pattern: Full refresh
+
+Invoices by Service:
+  Endpoint: GET /practicemanager/3.1/invoice.api/list
+  Additional: GET /practicemanager/3.1/invoice.api/get/{invoiceNumber}
+  Transformation:
+    - Link to jobs → tasks → service types
+    - Sum invoice amounts by service_type = "Invoiced $"
+    - If no line-item allocation, apportion pro-rata by time value
+  ETL Frequency: Every 2 hours
+  ETL Pattern: Incremental
+
+Calculations:
+  Net Write Ups: Invoiced $ - Time Added $
+  Avg Charge Rate: Time Revenue $ ÷ Time (Hours)
+```
+
+---
+
+### Dashboard 7: Debtors/AR Aging
+
+**Data Requirements**: Aged receivables, DSO trends, top debtors
+
+**Xero API Endpoints**:
+
+```yaml
+Invoices (Accounts Receivable):
+  Endpoint: GET /api.xro/2.0/Invoices
+  Parameters:
+    where: "Type=='ACCREC' AND (Status=='AUTHORISED' OR Status=='PARTPAID')"
+    page: Pagination
+  Key Fields:
+    - InvoiceID, InvoiceNumber
+    - ContactID: Debtor
+    - Date, DueDate
+    - AmountDue: Outstanding balance
+  Transformation:
+    - Filter for AmountDue > 0
+    - Calculate days_overdue = CURRENT_DATE - DueDate
+    - Assign to aging buckets (<30, 31-60, 61-90, 90+)
+    - Sum AmountDue by bucket
+  ETL Frequency: Every 2 hours
+  ETL Pattern: Incremental sync
+
+Contacts (Debtors):
+  Endpoint: GET /api.xro/2.0/Contacts
+  Key Fields:
+    - ContactID
+    - Name: Contact name
+  Transformation:
+    - Join with invoices on ContactID
+  ETL Frequency: Daily
+  ETL Pattern: Full refresh
+
+Payments (for DSO):
+  Endpoint: GET /api.xro/2.0/Payments
+  Key Fields:
+    - InvoiceID: Link to invoice
+    - Date: Payment date
+    - Amount: Payment amount
+  Transformation:
+    - Calculate days_to_collect = MAX(PaymentDate) - InvoiceDate
+    - Calculate rolling 12-month DSO
+    - Formula: (Avg AR Balance / Credit Sales) × Days in Period
+  ETL Frequency: Every 2 hours
+  ETL Pattern: Incremental
+
+Top Debtors:
+  Transformation:
+    - Group invoices by ContactID
+    - Sum AmountDue per contact
+    - Sort DESC, return top 15
+```
+
+---
+
+### Dashboard 8: Client Recoverability
+
+**Data Requirements**: Client WIP, profitability tracking, staff/client toggle views
+
+**XPM API Endpoints**:
+
+```yaml
+Time Entries by Client:
+  Endpoint: GET /practicemanager/3.1/time.api/list?from=YYYYMMDD&to=YYYYMMDD
+  Filter: billable==true AND not invoiced
+  Key Fields:
+    - jobUuid → clientUuid
+    - staffUuid: For "By Staff" view
+    - chargeAmount: Time $
+  Transformation:
+    - Join to jobs to get clientUuid
+    - Sum chargeAmount by client = "Time ($)"
+    - Alternative: Sum by staffUuid for "By Staff" view
+  ETL Frequency: Every 2 hours
+  ETL Pattern: Incremental
+
+Costs by Client:
+  Endpoint: GET /practicemanager/3.1/cost.api/list
+  Filter: billable==true AND not invoiced
+  Transformation:
+    - Sum amount by client = "Disbursements"
+  ETL Frequency: Every 2 hours
+  ETL Pattern: Incremental
+
+Progress Invoices:
+  Endpoint: GET /practicemanager/3.1/invoice.api/list
+  Filter: type IN ('progress', 'interim')
+  Transformation:
+    - Sum amount by client = "Interims"
+  ETL Frequency: Every 2 hours
+  ETL Pattern: Incremental
+
+Calculations:
+  Net WIP: (Time $ + Disbursements) - Interims
+  Recoverability %: (Invoiced / (Time + Costs)) × 100
+
+Problematic Clients Criteria:
+  - WIP > 90 days old
+  - Recoverability < 70%
+  - High WIP (>$50K) with aging >60 days
+```
+
+---
+
+## ETL Pipeline Patterns
+
+### Pattern 1: Incremental Sync (Transactional Data)
+
+**Used For**: Payments, Invoices, Time Entries, Costs
+**Frequency**: Every 2 hours
+**Implementation**:
+
+```python
+# n8n workflow pattern
+def incremental_sync(endpoint, entity_type):
+    # Get last sync timestamp
+    last_sync = get_last_sync_timestamp(entity_type)
+
+    # Xero/XPM request with ModifiedAfter filter
+    params = {
+        'If-Modified-Since': last_sync.isoformat(),
+        'order': 'UpdatedDateUTC DESC',
+        'page': 1
+    }
+
+    while True:
+        response = api_request(endpoint, params)
+        records = response.get(entity_type, [])
+
+        if not records:
+            break
+
+        # Transform and upsert
+        for record in records:
+            transformed = transform_record(record)
+            upsert_to_supabase(transformed, composite_key)
+
+        params['page'] += 1
+
+    # Update sync metadata
+    update_sync_timestamp(entity_type, datetime.utcnow())
+```
+
+### Pattern 2: Full Refresh (Report-Based Data)
+
+**Used For**: P&L Reports, Budget Summary
+**Frequency**: Every 2 hours (reports) or Daily (budgets)
+**Implementation**:
+
+```python
+def full_refresh_report(report_endpoint, params):
+    # Fetch full report
+    report_data = api_request(report_endpoint, params)
+
+    # Parse report structure
+    parsed_data = parse_report_rows(report_data)
+
+    # Truncate existing data for period
+    truncate_period_data(params['fromDate'], params['toDate'])
+
+    # Bulk insert new data
+    bulk_insert_to_supabase(parsed_data)
+```
+
+### Pattern 3: Master Data Refresh
+
+**Used For**: Contacts, Staff, Tasks, Categories
+**Frequency**: Daily
+**Implementation**:
+
+```python
+def master_data_refresh(endpoint, entity_type):
+    # Fetch all active records
+    all_records = fetch_all_pages(endpoint)
+
+    # Soft delete records not in response
+    existing_ids = get_existing_ids(entity_type)
+    returned_ids = [r['id'] for r in all_records]
+    deleted_ids = set(existing_ids) - set(returned_ids)
+
+    soft_delete_records(deleted_ids)
+
+    # Upsert all records
+    for record in all_records:
+        upsert_to_supabase(record)
+```
+
+---
+
+**Validation Needs**: Load testing with realistic API call volumes to validate rate limiting. Webhook reliability testing with simulated failures. Security testing of signed embed URLs. Integration testing with actual Xero/XPM sandbox environments.
+
+---
 

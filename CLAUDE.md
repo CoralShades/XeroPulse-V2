@@ -165,6 +165,50 @@ npm run db:reset        # Reset local database
 npm run type-check      # TypeScript compiler check
 ```
 
+## MCP Server Integration
+
+**CRITICAL: This project uses Archon MCP server for knowledge management and task tracking. Always refer to `docs/archon_ai.md` first.**
+
+### Archon MCP Server (Task Management & Knowledge Base)
+
+**Task-Driven Development Workflow:**
+1. **Get Task** → `find_tasks(task_id="...")` or `find_tasks(filter_by="status", filter_value="todo")`
+2. **Start Work** → `manage_task("update", task_id="...", status="doing")`
+3. **Research** → Use RAG knowledge base (see below)
+4. **Implement** → Write code based on research
+5. **Review** → `manage_task("update", task_id="...", status="review")`
+6. **Next Task** → `find_tasks(filter_by="status", filter_value="todo")`
+
+**NEVER skip task updates. NEVER code without checking current tasks first.**
+
+**RAG Knowledge Base Workflow:**
+- **Get sources** → `rag_get_available_sources()` - Returns list with id, title, url
+- **Search docs** → `rag_search_knowledge_base(query="keyword", source_id="src_xxx", match_count=5)`
+- **Find code** → `rag_search_code_examples(query="keyword", source_id="src_xxx", match_count=3)`
+- **Important**: Keep queries SHORT (2-5 keywords only) for best results
+
+**Task Management:**
+- Status flow: `todo` → `doing` → `review` → `done`
+- Task granularity: 30 minutes to 4 hours of work
+- Higher `task_order` (0-100) = higher priority
+
+**Project Management:**
+- `find_projects(query="...")` - Search projects
+- `manage_project("create"/"update"/"delete", ...)` - Manage projects
+- `find_tasks(filter_by="project", filter_value="proj-123")` - Get project tasks
+
+### Xero MCP Server (Financial Data Access)
+
+**Available Tools:** (If configured)
+- Xero API access for invoices, contacts, payments, accounts
+- Real-time financial data queries
+- Contact and client management
+- Refer to Xero MCP server documentation for full capabilities
+
+**Important**: Always use Archon task management instead of TodoWrite. See `docs/archon_ai.md` for complete workflow details.
+
+---
+
 ## Important Documentation Files
 
 ### Product Requirements
@@ -179,6 +223,12 @@ npm run type-check      # TypeScript compiler check
 - `docs/architecture/core-workflows.md` - Detailed workflow implementations
 - `docs/architecture/frontend-architecture.md` - Next.js + AG-UI component patterns
 - `docs/architecture/backend-architecture.md` - API routes + tRPC design
+- `docs/architecture/dashboard-specifications.md` - Complete dashboard component specifications
+
+### API & Integration Documentation
+- `docs/xero-api-endpoint-mapping.md` - Dashboard-to-endpoint mappings, transformation logic (1077 lines)
+- `docs/xero-api-endpoint-mapping-expanded.md` - ETL architecture, n8n workflows, production patterns (2674 lines)
+- `docs/dashboard-implementation-checklist.md` - Implementation tracking and validation
 
 ### AI Prompts (Code Generation Ready)
 - `docs/ai-prompts/platform-ui-master-prompt.md` - Master prompt (generates entire platform in 1-2 days)
@@ -189,9 +239,22 @@ npm run type-check      # TypeScript compiler check
 
 ### Project Documentation
 - `README.md` - Project overview, roadmap, installation guide
+- `docs/archon_ai.md` - **READ THIS FIRST** - Archon MCP workflow and task management
 - `docs/brief.md` - Comprehensive project brief (11 sections)
 - `docs/executive-summary.md` - 1-page leadership overview
 - `docs/front-end-spec.md` - Complete UX design specification
+
+### Story Files (Implementation Details)
+- `docs/stories/1.0.nextjs-project-init.md` - Next.js project initialization
+- `docs/stories/1.1.vps-infrastructure.md` - VPS setup and configuration
+- `docs/stories/1.2.n8n-deployment.md` - n8n ETL deployment
+- `docs/stories/1.3.supabase-database-schema.md` - Database schema and migrations
+- `docs/stories/1.4.xero-api-integration.md` - Xero API OAuth2 integration
+- `docs/stories/1.5.xero-supabase-etl.md` - Automated ETL workflows
+- `docs/stories/1.6.metabase-deployment.md` - Metabase BI platform setup
+- `docs/stories/1.7.income-expenses-dashboard.md` - Dashboard 1 implementation
+- `docs/stories/1.8.supabase-auth.md` - Authentication and RLS
+- `docs/stories/1.9.nextjs-portal-embedding.md` - Dashboard embedding in Next.js
 
 ## Implementation Strategy
 

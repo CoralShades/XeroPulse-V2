@@ -42,9 +42,9 @@ Transform your Xero accounting data into actionable insights with role-based das
 
 ### MVP (Month 1)
 - ✅ **Automated Xero Data Sync** - ETL pipeline syncs data every 2 hours via n8n
-- ✅ **3 Financial Dashboards** - Executive overview, cash flow, revenue analytics (specific requirements TBD)
+- ✅ **3 Financial Dashboards** - Income vs Expenses, Budget Tracking, YTD/MTD Views
 - ✅ **Role-Based Access Control** - Secure authentication with user management
-- ✅ **Modern Web Portal** - Next.js interface with embedded Apache Superset dashboards
+- ✅ **Modern Web Portal** - Next.js interface with embedded Metabase dashboards
 - ✅ **20 User Support** - Multi-user deployment with role assignments
 
 ### Post-MVP (Months 2-6)
@@ -69,9 +69,9 @@ Transform your Xero accounting data into actionable insights with role-based das
 |-----------|------------|---------|------|
 | **ETL Pipeline** | [n8n](https://n8n.io/) (self-hosted) | Xero API integration, scheduled workflows | $0 |
 | **Database & Auth** | [Supabase](https://supabase.com/) (free tier) | PostgreSQL database, user authentication | $0 |
-| **Dashboard Engine** | [Apache Superset](https://superset.apache.org/) | Business intelligence, data visualization | $0 |
+| **Dashboard Engine** | [Metabase](https://metabase.com/) | Business intelligence, data visualization | $0 |
 | **Web Portal** | [Next.js 14](https://nextjs.org/) (Vercel free tier) | User interface, dashboard embedding | $0 |
-| **Hosting** | Hetzner Cloud / DigitalOcean VPS | n8n + Superset deployment | $10-20/month |
+| **Hosting** | Hetzner Cloud / DigitalOcean VPS | n8n + Metabase deployment | $10-20/month |
 | **SSL/CDN** | Let's Encrypt + Cloudflare | HTTPS certificates, DNS | $0 |
 
 **Total Operating Cost:** ~$15/month (vs. $750+ for commercial BI platforms)
@@ -94,19 +94,19 @@ Transform your Xero accounting data into actionable insights with role-based das
        │ HTTPS                         │ SQL Queries
        ▼                               ▼
 ┌─────────────┐    iframe embed   ┌──────────┐
-│  Next.js    │◄─────────────────►│ Superset │
+│  Next.js    │◄─────────────────►│ Metabase │
 │   Portal    │                   │Dashboard │
 └─────────────┘                   └──────────┘
 
-VPS (n8n + Superset)    Cloud (Supabase + Vercel)
+VPS (n8n + Metabase)    Cloud (Supabase + Vercel)
 ```
 
 ### Data Flow
 
 1. **n8n** connects to Xero API via OAuth2, extracts financial data every 2 hours
 2. Data is transformed and loaded into **Supabase PostgreSQL** database
-3. **Apache Superset** connects to Supabase, generates interactive dashboards
-4. **Next.js portal** embeds Superset dashboards, handles user authentication and role-based access
+3. **Metabase** connects to Supabase, generates interactive dashboards
+4. **Next.js portal** embeds Metabase dashboards with JWT-signed URLs, handles user authentication and role-based access
 5. Users log in via **Supabase Auth**, see only dashboards authorized for their role
 
 ---
@@ -137,45 +137,75 @@ cd XeroPulse
 cp .env.example .env
 # Edit .env with your Xero, Supabase, and VPS credentials
 
-# 3. Deploy n8n and Superset to VPS
+# 3. Deploy n8n and Metabase to VPS
 cd infrastructure
 docker-compose up -d
 
 # 4. Configure Xero OAuth credentials in n8n
-# (Instructions TBD)
+# See docs/stories/1.4.xero-api-integration.md
 
 # 5. Set up Supabase database schema
-# (Migration scripts TBD)
+# See docs/stories/1.3.supabase-database-schema.md
+# Run migrations from docs/architecture/database-schema.md
 
 # 6. Deploy Next.js portal to Vercel
 cd apps/web
 vercel deploy
 
 # 7. Import n8n workflows
-# (Workflow files TBD)
+# See docs/stories/1.5.xero-supabase-etl.md
+# Workflow templates in docs/xero-api-endpoint-mapping-expanded.md
 
-# 8. Import Superset dashboards
-# (Dashboard exports TBD)
+# 8. Import Metabase dashboards
+# See docs/stories/1.6.metabase-deployment.md
+# Dashboard specifications in docs/architecture/dashboard-specifications.md
 ```
 
 ---
 
 ## 📚 Documentation
 
+### 🚀 Getting Started
+
+- **[Archon AI Workflow](docs/archon_ai.md)** - **START HERE** - Task management, RAG knowledge base, MCP server integration
+- **[Getting Started - Frontend](docs/GETTING-STARTED-FRONTEND.md)** - Frontend development quick start guide
+
 ### Project Documentation
 
-- **[Product Requirements Document (PRD)](docs/prd.md)** - Complete PRD with 38 user stories across 4 epics
-- **[Project Brief](docs/brief.md)** - Comprehensive project documentation (11 sections covering problem, solution, architecture, risks, roadmap)
+- **[Product Requirements Document (PRD)](docs/prd/index.md)** - Complete PRD with 38 user stories across 6 epics
+- **[Project Brief](docs/brief.md)** - Comprehensive project documentation (11 sections)
 - **[Executive Summary](docs/executive-summary.md)** - 1-page overview for leadership approval
 - **[Presentation Deck](docs/presentation.md)** - 23-slide stakeholder presentation
 - **[Brainstorming Results](docs/brainstorming-session-results.md)** - Research analyzing 45+ technical options
 
-### Frontend Development Guides ⚡ **NEW**
+### Architecture Documentation
 
-- **[🚀 Getting Started - Frontend](docs/GETTING-STARTED-FRONTEND.md)** - Quick start guide: Choose your path (AI-First, Component-by-Component, or Manual)
-- **[📖 AI Prompts Usage Guide](docs/ai-prompts/README.md)** - Comprehensive guide: Which prompt to use, when, and how they relate to epics
-- **[🎯 Visual Index](docs/ai-prompts/INDEX.md)** - Quick visual reference with decision trees and scenario examples
-- **[🎨 Frontend Specification](docs/front-end-spec.md)** - Complete UX design specification with wireframes, user flows, and component library
+- **[Architecture Overview](docs/architecture/index.md)** - Complete system architecture
+- **[Tech Stack](docs/architecture/tech-stack.md)** - All technology versions specified
+- **[Database Schema](docs/architecture/database-schema.md)** - Complete schema with RLS policies
+- **[Dashboard Specifications](docs/architecture/dashboard-specifications.md)** - Component specs for all 8 dashboards (1200+ lines)
+- **[Core Workflows](docs/architecture/core-workflows.md)** - ETL, auth, dashboard embedding flows
+- **[Frontend Architecture](docs/architecture/frontend-architecture.md)** - Next.js + component patterns
+- **[Backend Architecture](docs/architecture/backend-architecture.md)** - API routes + tRPC design
+
+### API & Integration Documentation ⚡ **NEW**
+
+- **[Xero API Endpoint Mapping](docs/xero-api-endpoint-mapping.md)** - Dashboard-to-endpoint mappings, transformation logic (1077 lines)
+- **[Xero API Endpoint Mapping (Expanded)](docs/xero-api-endpoint-mapping-expanded.md)** - ETL architecture, n8n workflows, production patterns (2674 lines)
+- **[Dashboard Implementation Checklist](docs/dashboard-implementation-checklist.md)** - Implementation tracking and validation
+
+### Story Files (Epic 1 - Foundation)
+
+- **[1.0 - Next.js Project Init](docs/stories/1.0.nextjs-project-init.md)** - Initialize Next.js with Supabase
+- **[1.1 - VPS Infrastructure](docs/stories/1.1.vps-infrastructure.md)** - VPS setup and Docker
+- **[1.2 - n8n Deployment](docs/stories/1.2.n8n-deployment.md)** - ETL platform deployment
+- **[1.3 - Supabase Schema](docs/stories/1.3.supabase-database-schema.md)** - Database setup
+- **[1.4 - Xero API Integration](docs/stories/1.4.xero-api-integration.md)** - OAuth2 + API endpoints
+- **[1.5 - Xero-Supabase ETL](docs/stories/1.5.xero-supabase-etl.md)** - Automated workflows
+- **[1.6 - Metabase Deployment](docs/stories/1.6.metabase-deployment.md)** - BI platform setup
+- **[1.7 - Income vs Expenses Dashboard](docs/stories/1.7.income-expenses-dashboard.md)** - Dashboard 1
+- **[1.8 - Supabase Auth](docs/stories/1.8.supabase-auth.md)** - Authentication + RLS
+- **[1.9 - Next.js Portal Embedding](docs/stories/1.9.nextjs-portal-embedding.md)** - Dashboard embedding
 
 ### AI Prompt Files (Ready to Use)
 
@@ -188,14 +218,6 @@ Generate production-ready code with these AI prompts:
 - **[Responsive & Accessibility](docs/ai-prompts/04-responsive-accessibility.md)** - Mobile optimization, WCAG AA (3-4 hours)
 
 **Total:** 10,800+ lines of production-ready AI prompts with code examples, workflows, and epic mapping
-
-### Key Sections
-
-- [Problem Statement](docs/brief.md#problem-statement) - Why we're building this
-- [Technical Architecture](docs/brief.md#technical-considerations) - Platform requirements, tech stack, security
-- [MVP Scope](docs/brief.md#mvp-scope) - What's in/out for initial 4-week build
-- [Risks & Mitigation](docs/brief.md#risks--open-questions) - 10 identified risks with mitigation strategies
-- [Roadmap](docs/brief.md#post-mvp-vision) - Phase 2 features and long-term vision
 
 ---
 
@@ -315,7 +337,7 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ### Inspired By
 
-- **Apache Superset** - Open-source BI platform by Airbnb
+- **Metabase** - Open-source business intelligence platform
 - **n8n** - Fair-code workflow automation
 - **Supabase** - Open-source Firebase alternative
 

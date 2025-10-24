@@ -79,7 +79,7 @@ Expand XeroPulse beyond the MVP by integrating XPM/Workflow Max API to access pr
 
 #### Acceptance Criteria
 
-1. Superset dashboard created with title "YTD/MTD Budget Performance"
+1. Metabase dashboard created with title "YTD/MTD Budget Performance"
 2. Toggle widget (filter): User selects "MTD" (Month-to-Date) or "YTD" (Year-to-Date)
 3. Chart 1: Actual vs Budget comparison chart (extends Dashboard 2 logic) with MTD or YTD aggregation based on toggle
 4. Chart 2: Variance percentage displayed: ((Actual - Budget) / Budget) × 100
@@ -89,7 +89,7 @@ Expand XeroPulse beyond the MVP by integrating XPM/Workflow Max API to access pr
 8. Dashboard loads in <3 seconds with YTD data
 9. Visual design: Consistent with Dashboards 1-2 styling
 10. "Last updated" timestamp displayed
-11. Dashboard exported to version control (`/apps/superset-config/dashboards/dashboard-3-ytd-mtd.json`)
+11. Dashboard exported to version control (`/apps/metabase-config/dashboards/dashboard-3-ytd-mtd.json`)
 
 ### Story 3.5: Build Work In Progress by Team Dashboard (Dashboard 4)
 
@@ -99,7 +99,7 @@ Expand XeroPulse beyond the MVP by integrating XPM/Workflow Max API to access pr
 
 #### Acceptance Criteria
 
-1. Superset dashboard created with title "Work In Progress by Team"
+1. Metabase dashboard created with title "Work In Progress by Team"
 2. Chart 1: WIP by service team bar chart (teams: Accounting, Bookkeeping, SMSF, Support Hub, or as defined by client)
 3. WIP calculation: (Time Value + Billable Costs) - Progress Invoices for each job (source: `xpm_time_entries`, `xpm_costs`, Xero invoices)
 4. Chart 2: WIP aging breakdown (stacked bar or separate chart): <30 days, 31-60 days, 61-90 days, 90+ days old
@@ -111,7 +111,104 @@ Expand XeroPulse beyond the MVP by integrating XPM/Workflow Max API to access pr
 10. Dashboard loads in <3 seconds with current WIP dataset
 11. Visual design: Color coding for aging (green <30 days, yellow 31-60, orange 61-90, red 90+)
 12. "Last updated" timestamp displayed
-13. Dashboard exported to version control (`/apps/superset-config/dashboards/dashboard-4-wip-team.json`)
+13. Dashboard exported to version control (`/apps/metabase-config/dashboards/dashboard-4-wip-team.json`)
+
+#### Detailed Specifications
+
+**Visual Components**
+
+| Component | Type | Description | Data Source |
+|-----------|------|-------------|-------------|
+| Donut Charts (4x) | Donut/Pie Charts | WIP aging by team | XPM Jobs/Time/Costs |
+| WIP Summary Table | Data Table | Team breakdown | XPM aggregated |
+| Client Details Table | Sortable Table | Client-level WIP | XPM Job details |
+| WIP Trends Chart | Area Chart | Monthly WIP accumulation | XPM historical |
+| Team Filters | Dropdown | Team selector | XPM Staff |
+
+**WIP Calculation Formula**:
+```
+WIP = (Time Value + Billable Costs) - Progress Invoices
+```
+
+**Aging Calculation Logic**:
+```
+Aging Days = CURRENT_DATE - MIN(Job Start Date, Earliest Unbilled Time Entry Date)
+```
+
+**Metabase SQL Queries**
+
+**Query 1: WIP Donut Charts by Team**
+```sql
+WITH wip_by_team_aging AS (
+  SELECT
+    team_name,
+    CASE
+      WHEN aging_days <= 30 THEN '<30 days'
+      WHEN aging_days BETWEEN 31 AND 60 THEN '31-60 days'
+      WHEN aging_days BETWEEN 61 AND 90 THEN '61-90 days'
+      ELSE '90+ days'
+    END AS aging_bucket,
+    SUM(wip_amount) AS wip
+  FROM vw_wip_aging
+  WHERE organization_id = {{organization_id}}
+    AND report_date = {{report_date}}
+  GROUP BY team_name, aging_bucket
+)
+SELECT * FROM wip_by_team_aging
+WHERE team_name = {{team_name}}
+```
+
+**Query 2: Client Details Table**
+```sql
+SELECT
+  c.client_name,
+  SUM(j.time_value) AS total_time,
+  SUM(j.costs_value) AS disbursements,
+  SUM(j.invoiced_amount) AS interims,
+  SUM(j.wip_amount) AS wip_accumulated
+FROM jobs j
+JOIN clients c ON j.client_id = c.id
+WHERE j.organization_id = {{organization_id}}
+  AND j.status = 'in_progress'
+GROUP BY c.client_name
+ORDER BY wip_accumulated DESC
+```
+
+**Metabase Chart Configurations**
+- Donut Charts: 4 separate charts (Accounting, Bookkeeping, SMSF, Support Hub)
+- Colors: Green (<30 days), Yellow (31-60), Orange (61-90), Red (90+)
+- Table Features: Sortable, paginated, exportable to CSV
+
+**Shadcn/ui Components Required** (for internal BI alternative)
+- ✅ `Table` - WIP client details table (sortable, expandable)
+- ✅ `Card` - Container for donut charts
+- ✅ `Tabs` - Overview / WIP by Team / Details navigation
+- ✅ `Select` - Team and client filters
+- ✅ `Badge` - Aging bucket indicators
+- ✅ `Calendar` + `Popover` - Date range picker
+- ✅ `Button` - Export to Excel action
+
+**Database View Dependencies**:
+```sql
+CREATE MATERIALIZED VIEW vw_wip_aging AS
+SELECT
+  pd.organization_id,
+  s.team_name,
+  c.client_name,
+  j.job_number,
+  j.id AS job_id,
+  (SUM(t.charge_value) + SUM(co.cost_amount) - SUM(i.invoice_amount)) AS wip_amount,
+  CURRENT_DATE - j.start_date AS aging_days,
+  CURRENT_DATE AS report_date
+FROM project_data j
+JOIN clients c ON j.client_id = c.id
+LEFT JOIN time_entries t ON j.id = t.job_id
+LEFT JOIN costs co ON j.id = co.job_id
+LEFT JOIN invoices i ON j.id = i.job_id
+LEFT JOIN staff s ON j.assigned_staff_id = s.id
+WHERE j.status = 'in_progress'
+GROUP BY pd.organization_id, s.team_name, c.client_name, j.job_number, j.id, j.start_date;
+```
 
 ### Story 3.6: Build ATO Lodgment Status Dashboard (Dashboard 5)
 
@@ -122,7 +219,7 @@ Expand XeroPulse beyond the MVP by integrating XPM/Workflow Max API to access pr
 #### Acceptance Criteria
 
 1. **PREREQUISITE CONFIRMED:** Suntax API availability validated (if API unavailable, this story deferred or replaced with manual data entry approach)
-2. Superset dashboard created with title "ATO Lodgment Status"
+2. Metabase dashboard created with title "ATO Lodgment Status"
 3. Chart 1: Lodgment progress gauge by client type (ITR, TRT, CTR, SMSF, PTR) showing % complete
 4. Chart 2: Workflow state breakdown: Not Started, In Progress, Lodged, Overdue (color-coded)
 5. Chart 3: Client type performance table: Columns: Client Type, Total Clients, Lodged, Overdue, Completion %
@@ -133,8 +230,78 @@ Expand XeroPulse beyond the MVP by integrating XPM/Workflow Max API to access pr
 10. Dashboard loads in <3 seconds with current lodgment data
 11. Visual design: Red highlights for overdue, green for lodged, gray for not started
 12. "Last updated" timestamp displayed
-13. Dashboard exported to version control (`/apps/superset-config/dashboards/dashboard-5-ato-lodgment.json`)
+13. Dashboard exported to version control (`/apps/metabase-config/dashboards/dashboard-5-ato-lodgment.json`)
 14. **NOTE:** If Suntax API unavailable, implement manual CSV upload workflow for lodgment status data as interim solution
+
+#### **⚠️ CRITICAL BLOCKER: Data Source Uncertainty**
+
+**Issue**: No direct API available for ATO lodgment data. Xero/XPM do not track tax lodgment status.
+
+**Decision Required By**: End of Week 1, Epic 3
+
+**Resolution Options:**
+
+**Option A: Suntax API Integration** (Preferred - if available)
+- **Approach**: Investigate Suntax REST API or export capabilities
+- **Implementation**:
+  * Create Supabase `ato_lodgments` table
+  * Build n8n workflow: Suntax API → Transform → Supabase
+  * Configure Metabase dashboard queries on `ato_lodgments`
+- **Timeline**: 1-2 weeks if API exists
+- **Risk**: Suntax may not have public API
+
+**Option B: CSV Upload Workflow** (Interim Solution)
+- **Approach**: Weekly manual CSV upload from Suntax
+- **Implementation**:
+  * Admin exports CSV from Suntax
+  * n8n webhook receives CSV upload
+  * Parse and load to `ato_lodgments` table
+  * Metabase queries Supabase table
+- **Timeline**: 3-4 days
+- **Risk**: Manual process prone to delays, not real-time
+
+**Option C: XPM Custom Fields Tracking** (Fallback)
+- **Approach**: Use XPM task/job custom fields for lodgment status
+- **Implementation**:
+  * Admin team updates XPM custom field "Lodgment Status" per client
+  * n8n pulls custom field data via XPM API v3.1
+  * Transform to lodgment status table
+- **Timeline**: 1 week
+- **Risk**: Double data entry (staff update XPM + actual lodgment system)
+
+**Recommended Path**: Attempt Option A first (investigate Suntax API availability). If blocked within 3 days, proceed with Option B for MVP, plan migration to Option A for post-launch.
+
+**Impact on Timeline**: Could add 2-3 weeks to Epic 3 if Suntax integration complex.
+
+#### Detailed Specifications (Assuming Data Source Resolved)
+
+**Visual Components**
+
+| Component | Type | Description | Data Source |
+|-----------|------|-------------|-------------|
+| Lodgment Table | Data Table | Status by type (ITR, TRT, CTR, SMSF, PTR) | Suntax or CSV |
+| Progress Gauge | Radial Gauge | Overall completion % | Calculated |
+| Status Bar Chart | Horizontal Bar | Lodgments by state | Suntax or CSV |
+
+**Metabase SQL Query** (requires `ato_lodgments` table):
+```sql
+SELECT
+  client_type AS "ATO Client Type",
+  SUM(CASE WHEN status = 'Not Received' THEN 1 ELSE 0 END) AS "Not Received",
+  SUM(CASE WHEN status = 'Filed' THEN 1 ELSE 0 END) AS "Filed",
+  SUM(CASE WHEN status = 'Still To Do' THEN 1 ELSE 0 END) AS "Still To Do",
+  COUNT(*) AS "Total"
+FROM ato_lodgments
+WHERE organization_id = {{organization_id}}
+  AND ato_year = {{ato_year}}
+GROUP BY client_type
+```
+
+**Shadcn/ui Components Required**:
+- ✅ `Table` - Lodgment status table
+- ✅ `Badge` - Status indicators (Filed, Still To Do, Draft)
+- ✅ `Progress` - Radial progress (e.g., 71.34%)
+- ✅ `Select` - ATO Year dropdown
 
 ### Story 3.7: Build Services Analysis Dashboard (Dashboard 6)
 
@@ -144,7 +311,7 @@ Expand XeroPulse beyond the MVP by integrating XPM/Workflow Max API to access pr
 
 #### Acceptance Criteria
 
-1. Superset dashboard created with title "Services Analysis"
+1. Metabase dashboard created with title "Services Analysis"
 2. Chart 1: Service line profitability table with columns:
    - Service Type (EOFY, SMSF, Bookkeeping, ITR, BAS, Advisory, ASIC, FBT, Client Service, Tax Planning)
    - Time Added $ (billable hours × charge rate from XPM)
@@ -162,7 +329,104 @@ Expand XeroPulse beyond the MVP by integrating XPM/Workflow Max API to access pr
 10. Dashboard loads in <3 seconds with 12 months of service data
 11. Visual design: Color-coded write-ups (green positive, red negative)
 12. "Last updated" timestamp displayed
-13. Dashboard exported to version control (`/apps/superset-config/dashboards/dashboard-6-services.json`)
+13. Dashboard exported to version control (`/apps/metabase-config/dashboards/dashboard-6-services.json`)
+
+#### Detailed Specifications
+
+**Visual Components**
+
+| Component | Type | Description | Data Source |
+|-----------|------|-------------|-------------|
+| Services Table | Data Table | Service performance metrics | XPM Time + Xero Invoices |
+| Service Filter | Multi-Select | Service type selector | XPM Tasks/Categories |
+| Staff Filter | Multi-Select | Staff member selector | XPM Staff |
+| Export Button | Button | Export to Excel | N/A |
+
+**Table Columns**:
+- Service (e.g., EOFY, SMSF, Bookkeeping, ITR, BAS, Advisory)
+- Time Added $ (charge value of time entered)
+- Invoiced (invoice amounts)
+- Net Write Ups (Invoiced - Time Added)
+- Time (Hours) (billable hours)
+- Time Revenue (realized revenue)
+- Avg. Charge Rate (Time Revenue ÷ Hours)
+
+**Metabase SQL Query**:
+```sql
+WITH service_time AS (
+  SELECT
+    service_type,
+    SUM(hours) AS total_hours,
+    SUM(charge_value) AS time_added_dollars
+  FROM time_entries
+  WHERE organization_id = {{organization_id}}
+    AND service_date BETWEEN {{start_date}} AND {{end_date}}
+    AND billable = TRUE
+  GROUP BY service_type
+),
+service_invoices AS (
+  SELECT
+    service_type,
+    SUM(amount) AS invoiced
+  FROM invoices
+  WHERE organization_id = {{organization_id}}
+    AND invoice_date BETWEEN {{start_date}} AND {{end_date}}
+  GROUP BY service_type
+)
+SELECT
+  t.service_type AS "Service",
+  t.time_added_dollars AS "Time Added $",
+  COALESCE(i.invoiced, 0) AS "Invoiced",
+  (COALESCE(i.invoiced, 0) - t.time_added_dollars) AS "Net Write Ups",
+  t.total_hours AS "Time (Hours)",
+  COALESCE(i.invoiced, 0) AS "Time Revenue",
+  CASE
+    WHEN t.total_hours > 0 THEN (COALESCE(i.invoiced, 0) / t.total_hours)
+    ELSE 0
+  END AS "Avg. Charge Rate"
+FROM service_time t
+LEFT JOIN service_invoices i ON t.service_type = i.service_type
+ORDER BY t.time_added_dollars DESC
+```
+
+**Service Type Mapping Strategy**:
+
+Create a mapping table to classify XPM tasks to service types:
+
+```sql
+CREATE TABLE service_type_mappings (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  organization_id UUID NOT NULL REFERENCES organizations(id),
+  xpm_task_uuid UUID NOT NULL,
+  xpm_task_name TEXT NOT NULL,
+  service_type TEXT NOT NULL CHECK (service_type IN (
+    'EOFY Financials & Tax Returns',
+    'SMSF Financials & Tax Return',
+    'Bookkeeping',
+    'ITR',
+    'BAS',
+    'Advisory',
+    'ASIC Annual Review',
+    'Client Service',
+    'FBT',
+    'Tax Planning'
+  )),
+  UNIQUE (organization_id, xpm_task_uuid)
+);
+```
+
+**Metabase Chart Configurations**:
+- Table with conditional formatting: Net Write Ups green (positive) / red (negative)
+- Sortable columns
+- Export to CSV/Excel enabled
+- Filters: Service Type Multi-Select, Staff Multi-Select, Date Range
+
+**Shadcn/ui Components Required** (for internal BI alternative):
+- ✅ `Table` - Services performance table (sortable)
+- ✅ `MultiSelect` - Service and staff filters
+- ✅ `Button` - Export to Excel
+- ✅ `Calendar` + `Popover` - Date range selector
+- ✅ `Badge` - Write-up/write-off indicators (green/red)
 
 ### Story 3.8: Build Client Recoverability Dashboard (Dashboard 8)
 
@@ -172,7 +436,7 @@ Expand XeroPulse beyond the MVP by integrating XPM/Workflow Max API to access pr
 
 #### Acceptance Criteria
 
-1. Superset dashboard created with title "Client Recoverability"
+1. Metabase dashboard created with title "Client Recoverability"
 2. Chart 1: Client WIP table with columns: Client Name, Time $, Disbursements, Interims (progress invoices), Net WIP
 3. Net WIP calculation: (Time $ + Disbursements) - Interims for each client
 4. Chart 2: Toggle view "By Staff" vs "By Client" (filter widget switches perspective)
@@ -186,7 +450,97 @@ Expand XeroPulse beyond the MVP by integrating XPM/Workflow Max API to access pr
 12. Dashboard loads in <3 seconds with current WIP dataset
 13. Visual design: Red highlighting for clients with >90 day WIP or <70% recoverability
 14. "Last updated" timestamp displayed
-15. Dashboard exported to version control (`/apps/superset-config/dashboards/dashboard-8-recoverability.json`)
+15. Dashboard exported to version control (`/apps/metabase-config/dashboards/dashboard-8-recoverability.json`)
+
+#### Detailed Specifications
+
+**Visual Components**
+
+| Component | Type | Description | Data Source |
+|-----------|------|-------------|-------------|
+| Client Table | Data Table | WIP breakdown by client | XPM Jobs/Time/Costs/Invoices |
+| View Toggle | Tabs | by Staff / by Client | N/A |
+| Client Filter | Dropdown | Select specific client | XPM Clients |
+| Column Sorting | Sort Icons | Sortable table headers | N/A |
+
+**Table Columns**:
+- Client (client name)
+- Time (unbilled time value)
+- Disbursements (unbilled costs)
+- Interims (progress invoices)
+- WIP (calculated: Time + Disbursements - Interims)
+
+**Net WIP Calculation Formula**:
+```
+Net WIP = (Time $ + Disbursements) - Interims
+```
+
+**Recoverability Percentage**:
+```
+Recoverability % = (Invoiced / (Time + Costs)) × 100
+```
+
+**Metabase SQL Query**:
+```sql
+SELECT
+  c.name AS client,
+  SUM(t.charge_value) AS time_value,
+  SUM(co.amount) AS disbursements,
+  SUM(i.amount) AS interims,
+  (SUM(t.charge_value) + SUM(co.amount) - SUM(i.amount)) AS wip
+FROM clients c
+LEFT JOIN jobs j ON c.id = j.client_id
+LEFT JOIN time_entries t ON j.id = t.job_id AND t.billable = TRUE AND t.invoiced = FALSE
+LEFT JOIN costs co ON j.id = co.job_id AND co.billable = TRUE AND co.invoiced = FALSE
+LEFT JOIN invoices i ON j.id = i.job_id AND i.type = 'progress'
+WHERE c.organization_id = {{organization_id}}
+  AND j.status = 'in_progress'
+GROUP BY c.name
+HAVING (SUM(t.charge_value) + SUM(co.amount) - SUM(i.amount)) > 0
+ORDER BY wip DESC
+```
+
+**"By Staff" View Query**:
+```sql
+SELECT
+  s.staff_name AS staff_member,
+  SUM(t.charge_value) AS time_value,
+  SUM(co.amount) AS disbursements,
+  SUM(i.amount) AS interims,
+  (SUM(t.charge_value) + SUM(co.amount) - SUM(i.amount)) AS wip
+FROM staff s
+LEFT JOIN time_entries t ON s.id = t.staff_id AND t.billable = TRUE AND t.invoiced = FALSE
+LEFT JOIN jobs j ON t.job_id = j.id
+LEFT JOIN costs co ON j.id = co.job_id
+LEFT JOIN invoices i ON j.id = i.job_id AND i.type = 'progress'
+WHERE s.organization_id = {{organization_id}}
+  AND j.status = 'in_progress'
+GROUP BY s.staff_name
+HAVING (SUM(t.charge_value) + SUM(co.amount) - SUM(i.amount)) > 0
+ORDER BY wip DESC
+```
+
+**Metabase Chart Configurations**:
+- Table with sortable columns
+- Search by client name
+- Export to CSV enabled
+- Toggle between "by Client" and "by Staff" views
+- Total row displaying sum of all WIP
+
+**Shadcn/ui Components Required** (for internal BI alternative):
+- ✅ `Table` - Client recoverability table
+- ✅ `Tabs` - by Staff / by Client toggle
+- ✅ `Button` - Sort icons in table headers
+- ✅ `Select` - Client dropdown filter
+
+**Key Business Logic**:
+- **Problematic Clients Criteria**:
+  * WIP > 90 days old
+  * Recoverability < 70%
+  * High WIP amount (>$50K) with aging >60 days
+- **Visual Indicators**:
+  * Red highlighting for problematic clients
+  * Negative interims displayed in red with parentheses: ($XX,XXX)
 
 ### Story 3.9: Enhance Authentication System with Advanced Features
 

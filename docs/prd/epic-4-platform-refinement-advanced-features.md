@@ -42,21 +42,21 @@ Optimize XeroPulse based on real-world usage data and user feedback collected du
 
 #### Acceptance Criteria
 
-1. Slow query analysis: Identify SQL queries taking >2 seconds (from Superset query logs)
+1. Slow query analysis: Identify SQL queries taking >2 seconds (from Metabase query logs)
 2. Database optimization implemented:
    - Add missing indexes on frequently filtered columns (identified from slow query analysis)
    - Rewrite complex queries using CTEs, subqueries, or materialized views for better performance
-   - Implement query result caching in Superset (tune cache TTL based on data freshness requirements)
+   - Implement query result caching in Metabase (tune cache TTL based on data freshness requirements)
 3. Chart optimization:
    - Limit row counts for large datasets (e.g., tables capped at 100 rows with pagination)
-   - Use aggregated queries instead of fetching all records and aggregating in Superset
+   - Use aggregated queries instead of fetching all records and aggregating in Metabase
    - Optimize date range filters (default to 6 months instead of "all time" if causing slowness)
-4. Superset configuration tuning:
+4. Metabase configuration tuning:
    - Increase cache hit rate to >70% (measure before/after optimization)
    - Configure query timeout thresholds (kill runaway queries after 30 seconds)
    - Enable SQL Lab query history limits (prevent unbounded memory usage)
 5. VPS resource optimization:
-   - Review Docker resource limits (adjust n8n/Superset RAM caps if needed)
+   - Review Docker resource limits (adjust n8n/Metabase RAM caps if needed)
    - Monitor CPU/RAM during peak usage (ensure <70% utilization)
    - Consider VPS upgrade to 8GB RAM if 4GB insufficient (document decision rationale)
 6. Performance testing:
@@ -77,7 +77,7 @@ Optimize XeroPulse based on real-world usage data and user feedback collected du
 #### Acceptance Criteria
 
 1. Export functionality added to each dashboard: "Export to PDF" button in dashboard header or toolbar
-2. PDF generation implemented using Superset's built-in export feature or headless browser (Puppeteer/Playwright)
+2. PDF generation implemented using Metabase's built-in export feature or headless browser (Puppeteer/Playwright)
 3. PDF layout optimized:
    - Dashboard title and date range included in header
    - All charts render correctly in PDF (no truncation, proper sizing)
@@ -183,7 +183,7 @@ Optimize XeroPulse based on real-world usage data and user feedback collected du
 1. Staging VPS provisioned: Separate VPS or separate Docker containers on existing VPS (lower cost option)
 2. Staging environment deployed with identical configuration to production:
    - n8n staging instance (workflows mirror production)
-   - Superset staging instance (dashboards mirror production)
+   - Metabase staging instance (dashboards mirror production)
    - Supabase staging project (separate database with test data)
    - Next.js staging deployment (separate Vercel preview deployment or staging branch)
 3. Staging data strategy:
@@ -224,7 +224,7 @@ Optimize XeroPulse based on real-world usage data and user feedback collected du
 
    **Key Performance Indicators:**
    - **Data Freshness:** 95%+ of syncs complete successfully within 2-hour window (measure from n8n execution logs)
-   - **Dashboard Performance:** 95%+ of loads complete in <3 seconds (measure from Superset/Vercel logs)
+   - **Dashboard Performance:** 95%+ of loads complete in <3 seconds (measure from Metabase/Vercel logs)
    - **System Uptime:** 99%+ availability (measure from uptime monitoring service)
    - **User Satisfaction Score:** 4.0+ average rating (5-point scale survey)
 
@@ -254,7 +254,7 @@ Optimize XeroPulse based on real-world usage data and user feedback collected du
    - User Management Guide (add users, assign roles, manage permissions)
    - RBAC Configuration (how to modify role-to-dashboard mappings)
    - Monitoring Guide (how to check sync status, VPS health, errors)
-   - Incident Response Runbook (common issues and fixes: sync failures, VPS down, Superset errors)
+   - Incident Response Runbook (common issues and fixes: sync failures, VPS down, Metabase errors)
    - Backup and Disaster Recovery (how to restore from snapshot, database export/import)
 
 3. **Developer Documentation** created (audience: future developers/maintainers):
@@ -262,10 +262,10 @@ Optimize XeroPulse based on real-world usage data and user feedback collected du
    - Deployment Guide (VPS setup, Docker Compose, Next.js deployment to Vercel)
    - Development Environment Setup (local dev setup, testing procedures)
    - n8n Workflow Documentation (workflow logic, API endpoint mappings, error handling)
-   - Superset Dashboard Documentation (dashboard definitions, query logic, chart configurations)
+   - Metabase Dashboard Documentation (dashboard definitions, query logic, chart configurations)
    - Database Schema Documentation (ERD, table descriptions, relationships, indexes)
    - Code Repository Guide (repo structure, branching strategy, PR process)
-   - Troubleshooting Guide (debugging n8n, Superset, Next.js issues)
+   - Troubleshooting Guide (debugging n8n, Metabase, Next.js issues)
 
 4. Documentation hosted accessibly:
    - User docs: In-portal help section or public docs site (docs.xeropulse.com)
@@ -311,7 +311,7 @@ Optimize XeroPulse based on real-world usage data and user feedback collected du
    - ✅ All documentation delivered (Story 4.9)
    - ✅ Admin team trained on user management, monitoring, incident response
    - ✅ Developer team (if different from original) onboarded to codebase
-   - ✅ Access credentials transferred securely (VPS, Supabase, Xero, XPM, Superset)
+   - ✅ Access credentials transferred securely (VPS, Supabase, Xero, XPM, Metabase)
    - ✅ Monitoring and alerting confirmed operational
    - ✅ Support processes established (who handles user questions? Who fixes bugs?)
    - ✅ Budget and cost tracking transferred to operations team

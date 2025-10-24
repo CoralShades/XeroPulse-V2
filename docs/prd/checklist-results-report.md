@@ -82,17 +82,17 @@ The PRD provides comprehensive technical guidance, clear requirements, and well-
 
 **Why this MVP works:**
 1. **Delivers real value:** 3 dashboards (Income vs Expenses, Budget, AR Aging) address core finance team pain points
-2. **Proves technical stack:** Xero → n8n → Supabase → Superset → Next.js validated end-to-end
+2. **Proves technical stack:** Xero → n8n → Supabase → Metabase → Next.js validated end-to-end
 3. **Timeline realistic:** 4 weeks for 3 dashboards + infrastructure + 20-user onboarding is achievable
 4. **User adoption testable:** 20 users, UAT in Week 4 validates product-market fit
 5. **Cost target met:** $15/month operating cost vs. $750 Power BI = clear ROI
 
 **No features to cut** - MVP is already minimal (3 dashboards, Xero-only, manual deployment, E2E testing deferred)
 
-**No missing essential features** - MVP covers authentication & RBAC, 2-hour automated sync, role-based dashboard access, and embedded Superset visualizations
+**No missing essential features** - MVP covers authentication & RBAC, 2-hour automated sync, role-based dashboard access, and embedded Metabase visualizations
 
 **Complexity concerns:**
-- Epic 1 is ambitious (9 stories covering infrastructure, n8n, Superset, Xero API, Supabase schema, first dashboard) - Mitigated by well-scoped stories and parallelizable infrastructure setup
+- Epic 1 is ambitious (9 stories covering infrastructure, n8n, Metabase, Xero API, Supabase schema, first dashboard) - Mitigated by well-scoped stories and parallelizable infrastructure setup
 - OAuth2 integration risk - Mitigated by dedicated Story 1.4 with error handling and retry logic
 
 **Timeline realism:** ✅ Achievable with proper execution
@@ -117,7 +117,7 @@ The PRD provides comprehensive technical guidance, clear requirements, and well-
 4. OAuth2 integration complexity - Mitigation: Dedicated Story 1.4 with error handling
 
 **Areas Needing Architect Investigation:**
-1. Superset → Next.js authentication flow (JWT token passing for seamless SSO)
+1. Metabase → Next.js authentication flow (JWT token passing for seamless SSO)
 2. Database query optimization strategy (indexes, materialized views for WIP calculations)
 3. Docker Compose orchestration (network config, volume management, reverse proxy for HTTPS)
 4. Real-time webhook architecture (Story 4.6 feasibility study)

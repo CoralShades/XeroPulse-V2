@@ -15,6 +15,7 @@
   - [External APIs](#external-apis)
   - [Core Workflows](#core-workflows)
   - [Database Schema](#database-schema)
+  - [Dashboard Specifications](#dashboard-specifications)
   - [Frontend Architecture Section](#frontend-architecture-section)
   - [Frontend Architecture](#frontend-architecture)
   - [Backend Architecture Section](#backend-architecture-section)

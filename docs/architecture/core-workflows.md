@@ -177,6 +177,299 @@ class FinancialDataTransformer:
         return transformed
 ```
 
+**n8n Workflow Implementation Details**
+
+**Docker Compose Configuration**:
+
+```yaml
+version: '3.8'
+
+services:
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: xero_pulse_n8n
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=${N8N_USER}
+      - N8N_BASIC_AUTH_PASSWORD=${N8N_PASSWORD}
+      - N8N_HOST=${N8N_HOST}
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=https
+      - NODE_ENV=production
+      - WEBHOOK_URL=https://${N8N_HOST}/
+      - GENERIC_TIMEZONE=Australia/Sydney
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./n8n/workflows:/home/node/.n8n/workflows
+    networks:
+      - xeropulse_network
+
+  metabase:
+    image: metabase/metabase:latest
+    container_name: xero_pulse_metabase
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - MB_DB_TYPE=postgres
+      - MB_DB_DBNAME=${METABASE_DB_NAME}
+      - MB_DB_PORT=5432
+      - MB_DB_USER=${METABASE_DB_USER}
+      - MB_DB_PASS=${METABASE_DB_PASSWORD}
+      - MB_DB_HOST=${SUPABASE_HOST}
+      - MB_ENCRYPTION_SECRET_KEY=${METABASE_ENCRYPTION_KEY}
+      - MB_SITE_URL=https://${METABASE_HOST}
+      - MB_EMBEDDING_SECRET_KEY=${METABASE_EMBEDDING_SECRET}
+    volumes:
+      - metabase_data:/metabase-data
+    networks:
+      - xeropulse_network
+    depends_on:
+      - n8n
+
+volumes:
+  n8n_data:
+  metabase_data:
+
+networks:
+  xeropulse_network:
+    driver: bridge
+```
+
+**n8n Workflow Node Sequences**:
+
+**Workflow 1: Xero Payments Incremental Sync**
+
+```json
+{
+  "name": "Xero Payments Incremental Sync",
+  "nodes": [
+    {
+      "id": "schedule-trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "hours", "value": 2 }]
+        }
+      },
+      "position": [250, 300]
+    },
+    {
+      "id": "get-last-sync",
+      "type": "n8n-nodes-base.supabase",
+      "parameters": {
+        "operation": "select",
+        "table": "sync_sessions",
+        "filterType": "manual",
+        "filters": {
+          "conditions": [
+            {
+              "column": "entity_type",
+              "operator": "equals",
+              "value": "payments"
+            },
+            {
+              "column": "status",
+              "operator": "equals",
+              "value": "completed"
+            }
+          ]
+        },
+        "sort": [{ "column": "completed_at", "direction": "desc" }],
+        "limit": 1
+      },
+      "position": [450, 300]
+    },
+    {
+      "id": "xero-get-payments",
+      "type": "n8n-nodes-base.httpRequest",
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.xero.com/api.xro/2.0/Payments",
+        "authentication": "oAuth2",
+        "qs": {
+          "where": "Status==\"AUTHORISED\"",
+          "If-Modified-Since": "={{ $node['get-last-sync'].json['completed_at'] }}",
+          "order": "UpdatedDateUTC DESC",
+          "page": 1
+        },
+        "options": {
+          "pagination": {
+            "paginationType": "offsetIncrement",
+            "limitParameter": "page",
+            "maxRequests": 100
+          }
+        }
+      },
+      "position": [650, 300]
+    },
+    {
+      "id": "transform-payments",
+      "type": "n8n-nodes-base.code",
+      "parameters": {
+        "code": "const items = $input.all();\nconst transformed = [];\n\nfor (const item of items) {\n  const payment = item.json;\n  \n  transformed.push({\n    id: `xero_payment_${payment.PaymentID}`,\n    organization_id: '{{ $json[\"organization_id\"] }}',\n    transaction_type: 'revenue',\n    transaction_date: payment.Date,\n    amount: parseFloat(payment.Amount),\n    source: 'xero',\n    source_id: payment.PaymentID,\n    metadata: {\n      invoice_id: payment.Invoice?.InvoiceID,\n      payment_type: payment.PaymentType,\n      reference: payment.Reference\n    },\n    created_at: payment.UpdatedDateUTC,\n    updated_at: new Date().toISOString()\n  });\n}\n\nreturn transformed.map(item => ({ json: item }));"
+      },
+      "position": [850, 300]
+    },
+    {
+      "id": "upsert-to-supabase",
+      "type": "n8n-nodes-base.supabase",
+      "parameters": {
+        "operation": "upsert",
+        "table": "financial_data",
+        "options": {
+          "onConflict": "organization_id,source,source_id"
+        }
+      },
+      "position": [1050, 300]
+    },
+    {
+      "id": "update-sync-metadata",
+      "type": "n8n-nodes-base.supabase",
+      "parameters": {
+        "operation": "insert",
+        "table": "sync_sessions",
+        "fields": {
+          "entity_type": "payments",
+          "status": "completed",
+          "records_processed": "={{ $json['count'] }}",
+          "completed_at": "={{ new Date().toISOString() }}"
+        }
+      },
+      "position": [1250, 300]
+    },
+    {
+      "id": "trigger-metabase-refresh",
+      "type": "n8n-nodes-base.httpRequest",
+      "parameters": {
+        "method": "POST",
+        "url": "https://{{ $env['METABASE_HOST'] }}/api/cache/invalidate",
+        "authentication": "headerAuth",
+        "headerParameters": {
+          "X-Metabase-Session": "{{ $env['METABASE_SESSION_TOKEN'] }}"
+        },
+        "body": {
+          "tables": ["financial_data"]
+        }
+      },
+      "position": [1450, 300]
+    }
+  ],
+  "connections": {
+    "schedule-trigger": { "main": [[{ "node": "get-last-sync" }]] },
+    "get-last-sync": { "main": [[{ "node": "xero-get-payments" }]] },
+    "xero-get-payments": { "main": [[{ "node": "transform-payments" }]] },
+    "transform-payments": { "main": [[{ "node": "upsert-to-supabase" }]] },
+    "upsert-to-supabase": { "main": [[{ "node": "update-sync-metadata" }]] },
+    "update-sync-metadata": { "main": [[{ "node": "trigger-metabase-refresh" }]] }
+  }
+}
+```
+
+**Workflow 2: XPM WIP Data Sync**
+
+```json
+{
+  "name": "XPM WIP Data Sync",
+  "nodes": [
+    {
+      "id": "schedule-trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "hours", "value": 2 }]
+        }
+      }
+    },
+    {
+      "id": "parallel-fetch",
+      "type": "n8n-nodes-base.splitInBatches",
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      }
+    },
+    {
+      "id": "fetch-jobs",
+      "type": "n8n-nodes-base.httpRequest",
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.xero.com/practicemanager/3.1/job.api/list",
+        "authentication": "oAuth2",
+        "qs": {
+          "status": "In Progress"
+        }
+      }
+    },
+    {
+      "id": "fetch-time-entries",
+      "type": "n8n-nodes-base.httpRequest",
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.xero.com/practicemanager/3.1/time.api/list",
+        "qs": {
+          "from": "={{ $today.minus({ days: 90 }).toFormat('yyyyMMdd') }}",
+          "to": "={{ $today.toFormat('yyyyMMdd') }}"
+        }
+      }
+    },
+    {
+      "id": "fetch-costs",
+      "type": "n8n-nodes-base.httpRequest",
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.xero.com/practicemanager/3.1/cost.api/list"
+      }
+    },
+    {
+      "id": "merge-wip-data",
+      "type": "n8n-nodes-base.code",
+      "parameters": {
+        "code": "// Merge jobs, time, and costs to calculate WIP\nconst jobs = $node['fetch-jobs'].json;\nconst timeEntries = $node['fetch-time-entries'].json;\nconst costs = $node['fetch-costs'].json;\n\nconst wipByJob = {};\n\n// Calculate time value per job\nfor (const time of timeEntries) {\n  if (!wipByJob[time.jobUuid]) {\n    wipByJob[time.jobUuid] = { time: 0, costs: 0, interims: 0 };\n  }\n  if (time.billable && !time.invoiced) {\n    wipByJob[time.jobUuid].time += parseFloat(time.chargeAmount || 0);\n  }\n}\n\n// Calculate costs per job\nfor (const cost of costs) {\n  if (!wipByJob[cost.jobUuid]) {\n    wipByJob[cost.jobUuid] = { time: 0, costs: 0, interims: 0 };\n  }\n  if (cost.billable && !cost.invoiced) {\n    wipByJob[cost.jobUuid].costs += parseFloat(cost.amount || 0);\n  }\n}\n\n// Calculate WIP\nconst wipRecords = [];\nfor (const [jobUuid, wip] of Object.entries(wipByJob)) {\n  const job = jobs.find(j => j.uuid === jobUuid);\n  if (!job) continue;\n  \n  const totalWip = wip.time + wip.costs - wip.interims;\n  if (totalWip > 0) {\n    wipRecords.push({\n      json: {\n        job_uuid: jobUuid,\n        client_uuid: job.clientUuid,\n        time_value: wip.time,\n        costs_value: wip.costs,\n        interims: wip.interims,\n        wip_amount: totalWip,\n        aging_days: Math.floor((new Date() - new Date(job.startDate)) / (1000 * 60 * 60 * 24)),\n        updated_at: new Date().toISOString()\n      }\n    });\n  }\n}\n\nreturn wipRecords;"
+      }
+    },
+    {
+      "id": "upsert-wip-to-supabase",
+      "type": "n8n-nodes-base.supabase",
+      "parameters": {
+        "operation": "upsert",
+        "table": "project_wip",
+        "options": {
+          "onConflict": "job_uuid"
+        }
+      }
+    },
+    {
+      "id": "refresh-materialized-view",
+      "type": "n8n-nodes-base.postgres",
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "REFRESH MATERIALIZED VIEW CONCURRENTLY vw_wip_aging;"
+      }
+    }
+  ],
+  "connections": {
+    "schedule-trigger": { "main": [[{ "node": "parallel-fetch" }]] },
+    "parallel-fetch": {
+      "main": [
+        [{ "node": "fetch-jobs" }],
+        [{ "node": "fetch-time-entries" }],
+        [{ "node": "fetch-costs" }]
+      ]
+    },
+    "fetch-jobs": { "main": [[{ "node": "merge-wip-data" }]] },
+    "fetch-time-entries": { "main": [[{ "node": "merge-wip-data" }]] },
+    "fetch-costs": { "main": [[{ "node": "merge-wip-data" }]] },
+    "merge-wip-data": { "main": [[{ "node": "upsert-wip-to-supabase" }]] },
+    "upsert-wip-to-supabase": { "main": [[{ "node": "refresh-materialized-view" }]] }
+  }
+}
+```
+
 **Error Handling & Recovery**
 
 ```python

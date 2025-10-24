@@ -12,7 +12,7 @@ Complete the MVP by building the remaining two dashboards (Monthly Invoicing to 
 
 #### Acceptance Criteria
 
-1. Superset dashboard created with title "Monthly Invoicing to Budget"
+1. Metabase dashboard created with title "Monthly Invoicing to Budget"
 2. Chart 1: Bar chart showing actual invoiced amounts by month (source: Xero Invoices API, aggregated by invoice date)
 3. Chart 2: Line chart overlay showing budget targets by month (source: Xero Budget Summary API)
 4. Chart 3: Variance calculation displayed (Actual - Budget) with color coding (green for over budget, red for under budget)
@@ -23,7 +23,69 @@ Complete the MVP by building the remaining two dashboards (Monthly Invoicing to 
 9. Dashboard loads in <3 seconds with 12 months of data
 10. Visual design: Consistent with Dashboard 1 styling (blue/gray palette, clean layout)
 11. "Last updated" timestamp displayed
-12. Dashboard exported to version control (`/apps/superset-config/dashboards/dashboard-2-budget.json`)
+12. Dashboard exported to version control (`/apps/metabase-config/dashboards/dashboard-2-budget.json`)
+
+#### Detailed Specifications
+
+**Visual Components**
+
+| Component | Type | Description | Data Source |
+|-----------|------|-------------|-------------|
+| Monthly Bars | Grouped Bar Chart | Actual vs Budget bars | Xero Payments + Budget API |
+| Legend | Legend | Orange (Actual), Blue (Budget) | N/A |
+| X-Axis | Axis Labels | Month names (Jul 2024 - Jun 2025) | N/A |
+| Y-Axis | Axis Scale | Dollar amounts ($0K - $800K) | N/A |
+
+**Metabase SQL Query**
+
+```sql
+WITH monthly_actuals AS (
+  SELECT
+    DATE_TRUNC('month', transaction_date) AS month,
+    SUM(amount) AS actual
+  FROM financial_data
+  WHERE
+    organization_id = {{organization_id}}
+    AND transaction_type = 'revenue'
+    AND transaction_date >= '2024-07-01'
+    AND transaction_date < '2025-07-01'
+  GROUP BY month
+),
+monthly_budgets AS (
+  SELECT
+    DATE_TRUNC('month', budget_month) AS month,
+    SUM(amount) AS budget
+  FROM budgets
+  WHERE organization_id = {{organization_id}}
+    AND account_type = 'revenue'
+    AND budget_year = 'FY25'
+  GROUP BY month
+)
+SELECT
+  TO_CHAR(a.month, 'Mon YYYY') AS month_label,
+  COALESCE(a.actual, 0) AS actual,
+  COALESCE(b.budget, 0) AS budget,
+  CASE
+    WHEN b.budget > 0 THEN ((a.actual - b.budget) / b.budget * 100)
+    ELSE 0
+  END AS variance_pct
+FROM monthly_actuals a
+FULL OUTER JOIN monthly_budgets b ON a.month = b.month
+ORDER BY a.month
+```
+
+**Metabase Chart Configuration**
+- Chart Type: Grouped Bar Chart
+- X-Axis: month_label
+- Y-Axis Multi-Series:
+  - actual (Orange #FB923C)
+  - budget (Blue #3B82F6)
+- Filters: Financial Year selector (FY24, FY25, FY26)
+
+**Shadcn/ui Components Required** (for internal BI alternative)
+- ✅ `Card` - Chart container
+- ✅ `Select` - Financial year selector
+- ✅ `Tooltip` - Hover data display
 
 ### Story 2.2: Build Debtors/AR Aging Dashboard (Dashboard 7)
 
@@ -33,7 +95,7 @@ Complete the MVP by building the remaining two dashboards (Monthly Invoicing to 
 
 #### Acceptance Criteria
 
-1. Superset dashboard created with title "Debtors/AR Aging"
+1. Metabase dashboard created with title "Debtors/AR Aging"
 2. Chart 1: Stacked bar chart showing AR aging by buckets (<30 days, 31-60 days, 61-90 days, 90+ days)
 3. Chart 2: AR aging calculation logic: Current date - Invoice due date determines bucket assignment
 4. Chart 3: Days Sales Outstanding (DSO) trend line over last 6 months (formula: (AR / Revenue) × Days in Period)
@@ -45,7 +107,102 @@ Complete the MVP by building the remaining two dashboards (Monthly Invoicing to 
 10. Dashboard loads in <3 seconds with current AR dataset
 11. Visual design: Red color gradient for aging (darker = older debt)
 12. "Last updated" timestamp displayed
-13. Dashboard exported to version control (`/apps/superset-config/dashboards/dashboard-7-ar-aging.json`)
+13. Dashboard exported to version control (`/apps/metabase-config/dashboards/dashboard-7-ar-aging.json`)
+
+#### Detailed Specifications
+
+**Visual Components**
+
+| Component | Type | Description | Data Source |
+|-----------|------|-------------|-------------|
+| Aging Donut Chart | Donut Chart | AR aging buckets visualization | Xero Invoices |
+| Top Debtors Bar Chart | Horizontal Bar | Largest outstanding balances | Xero Invoices |
+| DSO Line Chart | Line Chart | Rolling 12-month DSO trend | Xero Payments |
+| Summary KPI Cards | Stat Cards | Total AR, Avg DSO, Overdue | Calculated |
+| Client Filter | Dropdown | Filter by specific client | Xero Contacts |
+
+**Metabase SQL Queries**
+
+**Query 1: AR Aging Donut Chart**
+```sql
+SELECT
+  CASE
+    WHEN days_overdue <= 30 THEN '<30 days'
+    WHEN days_overdue BETWEEN 31 AND 60 THEN '31-60 days'
+    WHEN days_overdue BETWEEN 61 AND 90 THEN '61-90 days'
+    ELSE '90+ days'
+  END AS aging_bucket,
+  SUM(amount_due) AS balance
+FROM (
+  SELECT
+    invoice_id,
+    amount_due,
+    GREATEST(0, CURRENT_DATE - due_date) AS days_overdue
+  FROM invoices
+  WHERE organization_id = {{organization_id}}
+    AND type = 'ACCREC'
+    AND status IN ('AUTHORISED', 'PARTPAID')
+    AND amount_due > 0
+) AS aged_invoices
+GROUP BY aging_bucket
+```
+
+**Query 2: Top Debtors Bar Chart**
+```sql
+SELECT
+  c.name AS client,
+  SUM(i.amount_due) AS outstanding
+FROM invoices i
+JOIN contacts c ON i.contact_id = c.id
+WHERE i.organization_id = {{organization_id}}
+  AND i.amount_due > 0
+GROUP BY c.name
+ORDER BY outstanding DESC
+LIMIT 15
+```
+
+**Query 3: DSO Rolling 12-Month Line Chart**
+```sql
+WITH monthly_ar AS (
+  SELECT
+    DATE_TRUNC('month', snapshot_date) AS month,
+    AVG(total_ar_balance) AS avg_ar
+  FROM ar_snapshots
+  WHERE organization_id = {{organization_id}}
+    AND snapshot_date >= CURRENT_DATE - INTERVAL '12 months'
+  GROUP BY month
+),
+monthly_sales AS (
+  SELECT
+    DATE_TRUNC('month', transaction_date) AS month,
+    SUM(amount) AS credit_sales
+  FROM financial_data
+  WHERE organization_id = {{organization_id}}
+    AND transaction_type = 'revenue'
+    AND transaction_date >= CURRENT_DATE - INTERVAL '12 months'
+  GROUP BY month
+)
+SELECT
+  ar.month,
+  CASE
+    WHEN s.credit_sales > 0 THEN (ar.avg_ar / s.credit_sales * 30)
+    ELSE 0
+  END AS dso
+FROM monthly_ar ar
+JOIN monthly_sales s ON ar.month = s.month
+ORDER BY ar.month
+```
+
+**Metabase Chart Configurations**
+- Donut Chart: Colors - Green, Yellow, Orange, Red (aging severity)
+- Horizontal Bar Chart: Top 15 debtors by outstanding balance
+- Line Chart: Y-Axis = DSO (days), X-Axis = Month
+
+**Shadcn/ui Components Required** (for internal BI alternative)
+- ✅ `Card` - Chart containers and KPI cards
+- ✅ `Badge` - Aging bucket indicators
+- ✅ `Select` - Client filter dropdown
+- ✅ `Tooltip` - Hover data display
 
 ### Story 2.3: Implement Role-Based Access Control (RBAC) System
 
@@ -64,7 +221,7 @@ Complete the MVP by building the remaining two dashboards (Monthly Invoicing to 
 4. Next.js middleware enforces RBAC: On dashboard route access, check user role against permission mapping
 5. Unauthorized access returns 403 Forbidden page with message "You do not have permission to view this dashboard"
 6. Navigation sidebar dynamically renders only authorized dashboards for logged-in user
-7. Superset RBAC configured: Map Supabase roles to Superset dashboard permissions (executives → all dashboards, managers → subset, staff → limited)
+7. Metabase RBAC configured: Map Supabase roles to Metabase dashboard permissions (executives → all dashboards, managers → subset, staff → limited)
 8. Testing completed: 3 test users (one per role) verify correct dashboard access/denial
 9. Documentation created: RBAC permission matrix, how to modify role assignments
 
@@ -83,7 +240,7 @@ Complete the MVP by building the remaining two dashboards (Monthly Invoicing to 
    - Dashboard 2: Monthly Invoicing to Budget
    - Dashboard 7: Debtors/AR Aging
 4. Active dashboard highlighted in sidebar (visual indicator)
-5. Click dashboard name in sidebar loads embedded Superset dashboard in main content area
+5. Click dashboard name in sidebar loads embedded Metabase dashboard in main content area
 6. Header displays: XeroPulse logo (left), user email/name (right), logout button (dropdown menu)
 7. Default landing: User auto-redirected to first authorized dashboard after login
 8. Responsive layout: Desktop (1920px) shows full sidebar, Tablet (1024px) collapsible sidebar, Mobile (<1024px) hamburger menu
@@ -184,13 +341,13 @@ Complete the MVP by building the remaining two dashboards (Monthly Invoicing to 
 2. Monitoring dashboards established:
    - VPS resource monitoring: CPU, RAM, disk usage tracked (alerts at 80% threshold)
    - n8n sync monitoring: Success/failure rate logged, alert on 2 consecutive failures
-   - Superset query performance: Dashboard load times tracked, alert on >5 second loads
+   - Metabase query performance: Dashboard load times tracked, alert on >5 second loads
    - Vercel Next.js monitoring: Built-in Vercel analytics tracking page views, errors
 3. Backup verification: Weekly VPS snapshots tested (restore snapshot to verify integrity)
 4. Supabase database size monitored: Current usage displayed, alert at 400MB (80% of 500MB free tier)
 5. Uptime monitoring: External service (UptimeRobot or similar) pings portal URL every 5 minutes, alerts on downtime
 6. Alert channels configured: Email notifications to admin team for critical alerts
-7. Incident response runbook documented: Common issues and remediation steps (n8n sync failure, Superset down, VPS resource exhaustion, etc.)
+7. Incident response runbook documented: Common issues and remediation steps (n8n sync failure, Metabase down, VPS resource exhaustion, etc.)
 8. Production launch checklist completed:
    - ✅ All 3 dashboards deployed and tested
    - ✅ 20 users onboarded successfully
@@ -212,11 +369,11 @@ Complete the MVP by building the remaining two dashboards (Monthly Invoicing to 
 1. Dashboard load times measured over 7 days post-launch with 20 active users
 2. Performance bottlenecks identified:
    - Slow SQL queries (>2 seconds) logged and optimized (add indexes, rewrite queries)
-   - Superset cache hit rate monitored (target: >60% cache hits to reduce DB load)
+   - Metabase cache hit rate monitored (target: >60% cache hits to reduce DB load)
    - Large datasets causing slow renders (implement pagination or query limits)
 3. Optimizations implemented:
    - Database query optimization: Add missing indexes on filtered columns
-   - Superset query result caching tuned (increase cache TTL if data freshness allows)
+   - Metabase query result caching tuned (increase cache TTL if data freshness allows)
    - Dashboard chart limits: Cap table rows to 100, use pagination for detail views
 4. Post-optimization measurements:
    - 95%+ of dashboard loads complete in <3 seconds (measured over 7 days)

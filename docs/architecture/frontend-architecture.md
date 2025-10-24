@@ -325,6 +325,308 @@ export function CreateUserForm() {
 
 ---
 
+## Shadcn/ui Component Library Inventory
+
+### Core Components (Required for MVP)
+
+Based on all 8 dashboards, the complete shadcn/ui component library needed:
+
+```typescript
+// Layout & Navigation
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Separator } from "@/components/ui/separator"
+
+// Data Display
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Badge } from "@/components/ui/badge"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+
+// Forms & Inputs
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Calendar } from "@/components/ui/calendar"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+
+// Feedback
+import { Progress } from "@/components/ui/progress"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Toast, ToastAction, ToastClose, ToastDescription, ToastProvider, ToastTitle, ToastViewport } from "@/components/ui/toast"
+
+// Utility
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { ScrollArea } from "@/components/ui/scroll-area"
+```
+
+### Custom Components (Build on shadcn)
+
+```typescript
+// Custom chart wrapper (for internal BI alternative)
+import { ChartContainer, ChartTooltip, ChartLegend } from "@/components/ui/chart"
+
+// Custom data table with sorting, filtering, pagination
+import { DataTable } from "@/components/ui/data-table"
+
+// Custom multi-select (extends Select)
+import { MultiSelect } from "@/components/ui/multi-select"
+
+// Custom date range picker (extends Calendar)
+import { DateRangePicker } from "@/components/ui/date-range-picker"
+
+// Custom radial progress (for Dashboard 5)
+import { RadialProgress } from "@/components/ui/radial-progress"
+
+// Custom stat card (KPI metrics)
+import { StatCard } from "@/components/ui/stat-card"
+```
+
+### Component-to-Dashboard Mapping
+
+| Dashboard | Required Components | Custom Components |
+|-----------|---------------------|-------------------|
+| **Dashboard 1** | Card, Tabs, Select, Badge, Separator | ChartContainer (if internal BI) |
+| **Dashboard 2** | Card, Select, Tooltip | ChartContainer (if internal BI) |
+| **Dashboard 3** | Card, Tabs, Progress, Badge | StatCard, ChartContainer |
+| **Dashboard 4** | Table, Card, Tabs, Select, Badge, Calendar, Popover, Button | DataTable (expandable rows) |
+| **Dashboard 5** | Table, Badge, Progress, Select | RadialProgress |
+| **Dashboard 6** | Table, Card, Button, Calendar, Popover, Badge | MultiSelect, DataTable |
+| **Dashboard 7** | Card, Badge, Select, Tooltip | ChartContainer (if internal BI) |
+| **Dashboard 8** | Table, Card, Tabs, Button, Select | DataTable |
+
+---
+
+## Charting Library Decision Framework
+
+### Option A: Recharts (Recommended for MVP)
+
+**Installation**:
+```bash
+npm install recharts
+```
+
+**Pros**:
+- ✅ React-native, fully composable
+- ✅ Well-documented with extensive examples
+- ✅ TypeScript support out-of-the-box
+- ✅ Supports all chart types needed (Bar, Line, Area, Donut)
+- ✅ Free and open-source
+
+**Cons**:
+- ⚠️ Styling requires manual configuration
+- ⚠️ Some advanced features require custom code
+- ⚠️ Bundle size: ~95KB gzipped
+
+**Best For**: Bar, Line, Area, and Donut charts across all dashboards
+
+**Example Usage**:
+```typescript
+import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts'
+
+export function IncomeExpenseChart({ data }: { data: ChartData[] }) {
+  return (
+    <ComposedChart width={1000} height={400} data={data}>
+      <CartesianGrid strokeDasharray="3 3" />
+      <XAxis dataKey="weekEnding" />
+      <YAxis />
+      <Tooltip />
+      <Legend />
+      <Bar dataKey="income" fill="#3B82F6" name="Income" />
+      <Line
+        type="monotone"
+        dataKey="wagesAvg"
+        stroke="#FBBF24"
+        name="Wages (8wk Avg)"
+        strokeWidth={2}
+      />
+    </ComposedChart>
+  )
+}
+```
+
+### Option B: Tremor (Modern Alternative)
+
+**Installation**:
+```bash
+npm install @tremor/react
+```
+
+**Pros**:
+- ✅ Tailwind-native, beautiful defaults
+- ✅ Built-in dark mode support
+- ✅ Dashboard-style charts with minimal config
+- ✅ Excellent TypeScript support
+- ✅ Smaller bundle size: ~45KB gzipped
+
+**Cons**:
+- ⚠️ Less customizable than Recharts
+- ⚠️ Fewer chart types available
+- ⚠️ Newer library (less community resources)
+
+**Best For**: KPI cards, simple charts, donut charts
+
+**Example Usage**:
+```typescript
+import { DonutChart, Card } from "@tremor/react"
+
+export function WIPAgingChart({ data }: { data: WIPData[] }) {
+  return (
+    <Card>
+      <DonutChart
+        data={data}
+        category="wip"
+        index="agingBucket"
+        colors={["green", "yellow", "orange", "red"]}
+        valueFormatter={(value) => `$${(value / 1000).toFixed(0)}K`}
+      />
+    </Card>
+  )
+}
+```
+
+### Option C: AG Grid Enterprise (If Budget Allows)
+
+**Installation**:
+```bash
+npm install ag-grid-react ag-grid-enterprise
+```
+
+**Pricing**: ~$1,000/year per developer (commercial license required)
+
+**Pros**:
+- ✅ Advanced table features (sorting, filtering, grouping, Excel export)
+- ✅ Master-detail (expandable rows)
+- ✅ Virtual scrolling for large datasets
+- ✅ Built-in CSV/Excel export
+- ✅ Column pinning, resizing, reordering
+
+**Cons**:
+- ⚠️ Requires commercial license (~$1,000/year)
+- ⚠️ Large bundle size: ~200KB gzipped
+- ⚠️ Steep learning curve
+
+**Best For**: Dashboard 4 (WIP table with expandable rows), Dashboard 6 (Services table with complex filtering)
+
+**Decision**: Use AG Grid only if:
+- Budget allows (~$1,000/year)
+- Dashboard 4 and 6 require advanced table features
+- Export to Excel is critical feature
+
+Otherwise, use shadcn Table + DataTable custom component
+
+### Recommendation Matrix
+
+| Use Case | Recommended Library | Rationale |
+|----------|-------------------|-----------|
+| **Charts (All Dashboards)** | Recharts | Free, flexible, comprehensive chart types |
+| **KPI Cards & Simple Charts** | Tremor | Better DX, beautiful defaults |
+| **Basic Tables** | shadcn Table | Sufficient for most use cases, free |
+| **Advanced Tables** | AG Grid Enterprise | Only if budget allows, Dashboard 4/6 benefit most |
+| **Donut Charts** | Tremor | Simpler API, better visuals |
+
+**Final Recommendation**:
+- Use **Recharts** for charts (free, flexible)
+- Use **Tremor** for KPI cards and donut charts (better DX)
+- Use **shadcn Table** for basic tables
+- Upgrade to **AG Grid Enterprise** later if budget allows (Dashboard 4, 6 would benefit)
+
+---
+
+## Metabase vs Internal BI Decision Matrix
+
+### Option A: Metabase Embedding (MVP Recommended)
+
+**Pros**:
+- ✅ Faster time-to-market (2-3 weeks)
+- ✅ Leverage Metabase's query builder and chart library
+- ✅ Secure JWT-signed iframe embedding
+- ✅ Built-in caching and query optimization
+- ✅ No frontend charting code to maintain
+
+**Cons**:
+- ⚠️ Limited customization of look-and-feel
+- ⚠️ Iframe performance overhead
+- ⚠️ Dependent on Metabase infrastructure
+- ⚠️ Less control over user experience
+
+**Best For**: MVP launch, complex analytical dashboards (Dashboard 4, 6, 7, 8)
+
+**Implementation Complexity**: **Low**
+- 2-3 weeks for all 8 dashboards
+- Minimal frontend code (iframe embedding)
+- Focus on Metabase dashboard configuration
+
+### Option B: Internal BI with Shadcn + React Charts
+
+**Pros**:
+- ✅ Full design control and brand alignment
+- ✅ Better mobile responsiveness
+- ✅ Direct Supabase data access (no Metabase layer)
+- ✅ MCP integration for real-time data
+- ✅ No iframe performance overhead
+
+**Cons**:
+- ⚠️ Longer development time (6-8 weeks)
+- ⚠️ More frontend code to maintain
+- ⚠️ Need to implement caching manually
+- ⚠️ Higher complexity for complex dashboards
+
+**Best For**: Future enhancement, simple KPI dashboards (Dashboard 1, 2, 3)
+
+**Implementation Complexity**: **High**
+- 6-8 weeks for all 8 dashboards
+- Requires tRPC routers, Supabase database functions, chart components
+- Dashboard 4 alone could take 2-3 weeks
+
+### Option C: Hybrid Approach (Best of Both Worlds)
+
+**Strategy**:
+- Use **Metabase** for complex analytical dashboards (Dashboard 4, 6, 7, 8)
+- Build **Internal BI** for simple KPI dashboards (Dashboard 1, 2, 3)
+- Gradual migration strategy
+
+**Pros**:
+- ✅ Fast MVP launch with Metabase
+- ✅ Full control for key dashboards
+- ✅ Flexibility to migrate over time
+- ✅ Reduced dependency on Metabase
+
+**Cons**:
+- ⚠️ Maintain two systems
+- ⚠️ Inconsistent user experience initially
+- ⚠️ More complex architecture
+
+**Timeline**:
+- **Phase 1 (MVP - 3 weeks)**: All 8 dashboards in Metabase
+- **Phase 2 (Post-MVP - 4 weeks)**: Rebuild Dashboard 1, 2, 3 internally
+- **Phase 3 (Optional - 6 weeks)**: Migrate Dashboard 4, 6, 7, 8 if needed
+
+### Decision Framework
+
+**Choose Metabase if**:
+- ✅ Time-to-market is critical (MVP in 2-3 weeks)
+- ✅ Dashboard complexity is high (Dashboard 4, 6, 7, 8)
+- ✅ Team lacks frontend charting experience
+- ✅ Budget allows Metabase embedding license
+
+**Choose Internal BI if**:
+- ✅ Brand alignment and design control are critical
+- ✅ Mobile-first experience is priority
+- ✅ Team has strong React/TypeScript skills
+- ✅ Long-term maintenance cost is concern
+
+**Choose Hybrid if**:
+- ✅ Want fast MVP but full control later
+- ✅ Can afford phased implementation
+- ✅ Need to reduce Metabase dependency over time
+
+**XeroPulse Recommendation**: **Option A (Metabase Embedding)** for MVP, with Option C (Hybrid) as post-launch enhancement strategy.
+
+---
+
 **Detailed Rationale:**
 
 **Next.js App Router Choice**: App Router provides better performance through React Server Components, improved routing with layout support, and enhanced developer experience with file-based routing. The route grouping strategy isolates authentication flows from dashboard functionality.

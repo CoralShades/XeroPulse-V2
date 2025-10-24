@@ -2,13 +2,13 @@
 
 **Epic Goal:**
 
-Establish the technical foundation for XeroPulse by provisioning VPS infrastructure, deploying containerized n8n and Apache Superset services, integrating Xero API with OAuth2 authentication, implementing automated 2-hour data sync to Supabase PostgreSQL, and delivering the first production-ready dashboard (Income vs Expenses) with basic user authentication. This epic proves the end-to-end technical stack (Xero → n8n → Supabase → Superset → Next.js) while delivering immediate value to stakeholders through live financial insights from real Xero data.
+Establish the technical foundation for XeroPulse by provisioning VPS infrastructure, deploying containerized n8n and Metabase services, integrating Xero API with OAuth2 authentication, implementing automated 2-hour data sync to Supabase PostgreSQL, and delivering the first production-ready dashboard (Income vs Expenses) with basic user authentication. This epic proves the end-to-end technical stack (Xero → n8n → Supabase → Metabase → Next.js) while delivering immediate value to stakeholders through live financial insights from real Xero data.
 
 ### Story 1.1: Provision VPS Infrastructure and Docker Environment
 
 **As a** DevOps engineer,
 **I want** a production VPS with Docker Compose orchestration configured,
-**So that** we have a secure, monitored hosting environment for n8n and Superset services.
+**So that** we have a secure, monitored hosting environment for n8n and Metabase services.
 
 #### Acceptance Criteria
 
@@ -90,21 +90,21 @@ Establish the technical foundation for XeroPulse by provisioning VPS infrastruct
 8. Success criteria: 7 consecutive days with 95%+ successful sync executions (tested Week 2)
 9. Data freshness timestamp recorded in Supabase (`last_sync_at` metadata table)
 
-### Story 1.6: Deploy Apache Superset Dashboard Engine
+### Story 1.6: Deploy Metabase Dashboard Engine
 
 **As a** BI analyst,
-**I want** Apache Superset deployed and connected to Supabase PostgreSQL,
+**I want** Metabase deployed and connected to Supabase PostgreSQL,
 **So that** I can build interactive dashboards from synchronized Xero data.
 
 #### Acceptance Criteria
 
-1. Superset container running via Docker Compose with persistent volume for metadata storage
-2. Superset web UI accessible at https://superset.[domain] with HTTPS enabled
-3. Superset connected to Supabase PostgreSQL database (connection string configured, test query successful)
-4. Admin user created for Superset with documented credentials
-5. Docker resource limits configured (2GB RAM cap for Superset container)
-6. Superset service auto-restarts on failure (Docker restart policy: unless-stopped)
-7. Basic RBAC configured in Superset (roles: Admin, Dashboard Viewer created)
+1. Metabase container running via Docker Compose with persistent volume for metadata storage
+2. Metabase web UI accessible at https://metabase.[domain] with HTTPS enabled
+3. Metabase connected to Supabase PostgreSQL database (connection string configured, test query successful)
+4. Admin user created for Metabase with documented credentials
+5. Docker resource limits configured (2GB RAM cap for Metabase container)
+6. Metabase service auto-restarts on failure (Docker restart policy: unless-stopped)
+7. Basic RBAC configured in Metabase (roles: Admin, Dashboard Viewer created)
 8. Test chart created from Supabase data (e.g., simple bar chart of invoice totals by month)
 9. Query result caching enabled (15-minute cache TTL to reduce database load)
 
@@ -116,7 +116,7 @@ Establish the technical foundation for XeroPulse by provisioning VPS infrastruct
 
 #### Acceptance Criteria
 
-1. Superset dashboard created with title "Income vs Expenses"
+1. Metabase dashboard created with title "Income vs Expenses"
 2. Chart 1: Weekly income trend line (source: Xero Payments API, filtered for invoice payments received)
 3. Chart 2: Weekly expenses trend line (source: Xero Payments API, filtered for bill payments made)
 4. Chart 3: 8-week rolling average calculation for wages expense (source: Xero Transactions, filtered by account category)
@@ -126,7 +126,7 @@ Establish the technical foundation for XeroPulse by provisioning VPS infrastruct
 8. Dashboard loads in <3 seconds with 6 months of data
 9. Visual design: Clean layout, color-coded income (green) vs expenses (red), clear labels and legends
 10. "Last updated" timestamp displayed prominently (sourced from `last_sync_at` metadata)
-11. Dashboard exported to version control (`/apps/superset-config/dashboards/dashboard-1-income-expenses.json`)
+11. Dashboard exported to version control (`/apps/metabase-config/dashboards/dashboard-1-income-expenses.json`)
 
 ### Story 1.8: Implement Basic Authentication with Supabase Auth
 
@@ -156,8 +156,8 @@ Establish the technical foundation for XeroPulse by provisioning VPS infrastruct
 1. Next.js 15 project initialized with App Router, Tailwind CSS, shadcn/ui components
 2. Login page implemented: Email/password form integrated with Supabase Auth client
 3. Protected dashboard route (`/dashboards/income-expenses`) requiring authentication (middleware checks session)
-4. Income vs Expenses dashboard embedded via iframe from Superset URL
-5. Authentication token passed from Next.js to Superset (seamless single sign-on, no double login)
+4. Income vs Expenses dashboard embedded via iframe from Metabase URL
+5. Authentication token passed from Next.js to Metabase (seamless single sign-on, no double login)
 6. Logout functionality implemented (clears session, redirects to login page)
 7. Basic branding applied: XeroPulse logo, blue/gray color scheme, clean typography
 8. Responsive layout for desktop (1920px) and tablet (1024px) screen sizes
