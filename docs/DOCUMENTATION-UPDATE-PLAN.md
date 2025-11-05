@@ -899,5 +899,612 @@ return items.map(item => {
 
 ---
 
-**Status**: Ready for execution
-**Next Step**: Begin Phase 1 - Critical Fixes
+## Phase 9: Chakra UI Migration Strategy (2 hours)
+
+**Date Added**: 2025-10-25
+**Priority**: HIGH - Foundational technology change
+
+### Context
+
+User has decided to migrate from Shadcn/ui v4 to Chakra UI for the entire XeroPulse platform. This decision was made to:
+- Leverage Chakra UI MCP server integration for faster development
+- Use Chakra UI's built-in accessibility (WCAG 2.0 AA compliant)
+- Utilize Chakra UI Motion for animations (integrated Framer Motion)
+- Maintain cost-effectiveness (Chakra UI Free/Open Source - $0 cost)
+
+**User Decisions** (via questionnaire):
+1. ✅ **Hybrid Approach**: Keep AG-UI Enterprise for complex data grids (admin tables), use Chakra UI for all other components
+2. ✅ **Chakra UI Free**: Stick with open-source version (fits $15/month budget)
+3. ✅ **Chakra UI Motion**: Use built-in animation system (not direct Framer Motion)
+4. ✅ **Build Fresh**: Create new Chakra UI component library from scratch (not migrate existing)
+
+### Required Changes
+
+#### 9.1 Technology Decision Documentation
+
+**File**: `docs/architecture/tech-stack.md`
+
+**Changes**:
+```markdown
+# BEFORE (Line 10)
+| **Base Components** | Shadcn/ui v4 | 4.0+ | Accessible component foundations | ...
+
+# AFTER
+| **UI Component Library** | Chakra UI | 2.8+ | General UI components, layouts, forms | Built-in a11y (WCAG 2.0 AA), MCP integration, motion system, theme customization |
+| **Enterprise Data Grids** | AG-UI Enterprise | Latest | Complex tables (admin panel only) | Advanced features: inline editing, Excel export, virtualization |
+| **Animation System** | Chakra UI Motion | Built-in | Component transitions and micro-interactions | Integrated Framer Motion, consistent API, declarative animations |
+| **CSS Approach** | Chakra UI Styling | Style Props | Component styling and theming | Type-safe style props, responsive design tokens, no Tailwind needed |
+```
+
+**Add Section** (after line 60):
+```markdown
+### Chakra UI vs Shadcn/ui Decision Rationale
+
+**Why Chakra UI?**
+- ✅ **MCP Integration**: Chakra UI MCP server provides component examples, theme helpers, and a11y patterns
+- ✅ **Built-in Accessibility**: WCAG 2.0 AA compliant out-of-box (vs. manual a11y with Shadcn)
+- ✅ **Motion System**: Integrated Framer Motion via Chakra UI Motion (no separate setup)
+- ✅ **Type-Safe Styling**: Style props with TypeScript autocomplete (better DX than Tailwind strings)
+- ✅ **Theme System**: Powerful theme customization with tokens, variants, and component styles
+- ✅ **Zero Cost**: Open-source free tier meets all requirements (Shadcn also free, but less DX)
+
+**Hybrid Approach: Chakra UI + AG-UI**
+- **Chakra UI**: All general UI (forms, modals, layouts, navigation, cards, badges, buttons)
+- **AG-UI Enterprise**: Only for complex data grids requiring advanced features:
+  * User management table (admin panel)
+  * WIP analysis table (Dashboard 4)
+  * Services analysis table (Dashboard 6)
+  * Client recoverability table (Dashboard 8)
+
+**Trade-off**: Slightly more complex integration (2 component systems) but retains enterprise-grade table features while maximizing DX for 95% of UI components.
+```
+
+#### 9.2 Component Mapping Reference
+
+Create component mapping guide for developers:
+
+**Shadcn/ui → Chakra UI Equivalents**:
+
+| Shadcn Component | Chakra UI Component | Notes |
+|------------------|---------------------|-------|
+| `Button` | `Button` | Similar API, more variants |
+| `Input` | `Input` | Use with `FormControl` |
+| `Card` | `Card` + `CardHeader` + `CardBody` | More granular composition |
+| `Badge` | `Badge` | Similar, better color schemes |
+| `Dialog/Modal` | `Modal` | More layout options |
+| `Tabs` | `Tabs` + `TabList` + `TabPanels` | Similar composition |
+| `Table` | `Table` (simple) / AG-UI (complex) | Hybrid approach |
+| `Select` | `Select` | Native or custom chakra-react-select |
+| `Checkbox` | `Checkbox` | Similar API |
+| `Switch` | `Switch` | Similar API |
+| `Slider` | `Slider` | More features |
+| `Progress` | `Progress` + `CircularProgress` | More variants |
+| `Skeleton` | `Skeleton` | Similar API |
+| `Toast` | `useToast` hook | Different pattern |
+| `Dropdown Menu` | `Menu` | Similar composition |
+| `Popover` | `Popover` | Similar API |
+| `Tooltip` | `Tooltip` | Similar API |
+| `Avatar` | `Avatar` | Similar API |
+| `Accordion` | `Accordion` | Similar composition |
+
+**Animation Migration**:
+- Tailwind transitions → Chakra UI Motion
+- Framer Motion direct → Chakra UI Motion (MotionBox, MotionFlex, etc.)
+- Lottie animations → Keep as-is (compatible with Chakra)
+
+---
+
+## Phase 10: Update Core Technical Documentation (4 hours)
+
+**Priority**: HIGH - Developers reference these files constantly
+
+### 10.1 Complete Rewrite: front-end-spec.md (2.5 hours)
+
+**File**: `docs/front-end-spec.md` (1300 lines)
+
+**Scope**: Complete rewrite of component library sections
+
+**Sections to Rewrite**:
+
+1. **Component Library / Design System** (lines 459-650)
+   - Replace all Shadcn component specifications with Chakra UI
+   - Add Chakra theme configuration section
+   - Add Chakra Provider setup instructions
+   - Document hybrid Chakra + AG-UI approach
+
+2. **Core Components** (lines 500-635)
+   ```tsx
+   // OLD (Shadcn)
+   import { Button } from "@/components/ui/button"
+   import { Card, CardContent } from "@/components/ui/card"
+
+   // NEW (Chakra UI)
+   import { Button, Card, CardHeader, CardBody } from '@chakra-ui/react'
+   ```
+
+3. **Animation & Micro-interactions** (lines 960-1062)
+   - Replace Framer Motion examples with Chakra UI Motion
+   - Update animation token system
+   - Add motion variants examples
+
+4. **Branding & Style Guide** (lines 636-775)
+   - Replace Tailwind color classes with Chakra color tokens
+   - Update design token system to Chakra theme structure
+   - Add responsive design token examples
+
+5. **Form Components** (lines 871-959)
+   - Replace Shadcn form components with Chakra FormControl
+   - Update validation patterns for Chakra
+   - Add form example with Chakra + React Hook Form
+
+6. **Data Display Components** (new section)
+   - Add Chakra Table specifications (for simple tables)
+   - Document AG-UI integration pattern for complex tables
+   - Add data table decision matrix
+
+7. **Accessibility Requirements** (lines 777-870)
+   - Update with Chakra's built-in a11y features
+   - Note: Most a11y requirements met by default
+   - Add testing strategy for Chakra components
+
+**New Sections to Add**:
+
+```markdown
+### Chakra UI Theme Configuration
+
+**Theme File**: `src/theme/index.ts`
+
+```typescript
+import { extendTheme, type ThemeConfig } from '@chakra-ui/react'
+
+const config: ThemeConfig = {
+  initialColorMode: 'light',
+  useSystemColorMode: false,
+}
+
+const colors = {
+  brand: {
+    50: '#E6F6FF',
+    100: '#BAE3FF',
+    // ... XeroPulse brand colors
+    500: '#3B82F6', // Primary blue
+    600: '#2563EB',
+    // ...
+  },
+  accent: {
+    orange: '#FB923C',
+    yellow: '#FBBF24',
+    green: '#10B981',
+    red: '#EF4444',
+  }
+}
+
+const fonts = {
+  heading: `'Inter', sans-serif`,
+  body: `'Inter', sans-serif`,
+}
+
+const components = {
+  Button: {
+    baseStyle: {
+      fontWeight: '600',
+    },
+    variants: {
+      solid: {
+        bg: 'brand.500',
+        color: 'white',
+        _hover: { bg: 'brand.600' },
+      },
+    },
+  },
+  // ... other component customizations
+}
+
+export const theme = extendTheme({ config, colors, fonts, components })
+```
+
+### Chakra UI Provider Setup
+
+**Root Layout**: `app/layout.tsx`
+
+```typescript
+import { ChakraProvider, ColorModeScript } from '@chakra-ui/react'
+import { theme } from '@/theme'
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en">
+      <body>
+        <ColorModeScript initialColorMode={theme.config.initialColorMode} />
+        <ChakraProvider theme={theme}>
+          {children}
+        </ChakraProvider>
+      </body>
+    </html>
+  )
+}
+```
+
+### Hybrid Component Strategy: Chakra UI + AG-UI
+
+**Decision Matrix**: When to use which component system
+
+| Scenario | Use Chakra UI | Use AG-UI | Rationale |
+|----------|---------------|-----------|-----------|
+| Simple data table (<10 columns) | ✅ | ❌ | Chakra Table sufficient |
+| Complex data grid (>10 columns, sorting, filtering) | ❌ | ✅ | Need advanced features |
+| User management table | ❌ | ✅ | Inline editing, role management |
+| Dashboard KPI cards | ✅ | ❌ | Simple data display |
+| Forms and inputs | ✅ | ❌ | Chakra forms with validation |
+| Navigation and layout | ✅ | ❌ | Chakra layout components |
+| Modal dialogs | ✅ | ❌ | Chakra modals |
+| WIP analysis table | ❌ | ✅ | Grouping, aggregation, Excel export |
+
+**Integration Pattern**:
+
+```tsx
+// Admin page with hybrid approach
+import { Box, Heading, Button } from '@chakra-ui/react' // Chakra layout
+import { AgGridReact } from 'ag-grid-react' // AG-UI table
+import 'ag-grid-enterprise'
+
+export default function UserManagementPage() {
+  return (
+    <Box p={6}> {/* Chakra layout */}
+      <Heading mb={4}>User Management</Heading> {/* Chakra heading */}
+      <Button colorScheme="brand" mb={4}>Add User</Button> {/* Chakra button */}
+
+      {/* AG-UI table for complex data grid */}
+      <AgGridReact
+        rowData={users}
+        columnDefs={columnDefs}
+        enableCellChangeFlash
+        enableRangeSelection
+        // ... AG-UI features
+      />
+    </Box>
+  )
+}
+```
+
+### Chakra UI MCP Integration
+
+**When to Use Chakra UI MCP**:
+- Getting component examples and patterns
+- Checking accessible implementations
+- Finding theme customization recipes
+- Reviewing responsive design patterns
+
+**Available MCP Tools**:
+- `mcp__chakra-ui__get_component_props` - Component API reference
+- `mcp__chakra-ui__get_component_example` - Usage examples
+- `mcp__chakra-ui__list_components` - All available components
+- `mcp__chakra-ui__customize_theme` - Theme customization help
+
+**Example Usage**:
+```bash
+# Get Button component props and examples
+mcp__chakra-ui__get_component_props(component="button")
+
+# Get form field examples
+mcp__chakra-ui__get_component_example(component="input")
+```
+```
+
+### 10.2 Update frontend-architecture.md (1 hour)
+
+**File**: `docs/architecture/frontend-architecture.md`
+
+**Changes**:
+
+1. **Component Directory Structure** (lines 34-40)
+   ```
+   components/
+   ├── chakra/                    # Chakra theme and provider
+   │   ├── theme/
+   │   │   ├── index.ts          # Main theme
+   │   │   ├── colors.ts         # Color tokens
+   │   │   ├── components.ts     # Component styles
+   │   │   └── foundations.ts    # Typography, spacing, etc.
+   │   └── provider.tsx          # ChakraProvider wrapper
+   ├── ui/                        # Custom Chakra components
+   │   ├── stat-card.tsx
+   │   ├── data-table.tsx        # Chakra Table wrapper
+   │   └── ...
+   ├── ag-grid/                   # AG-UI components
+   │   ├── user-grid.tsx
+   │   ├── wip-grid.tsx
+   │   └── ...
+   ```
+
+2. **Atomic Design with Chakra** (lines 83-89)
+   ```markdown
+   - **Atoms**: Chakra primitives (Button, Input, Badge, Avatar, Icon)
+   - **Molecules**: Chakra compositions (FormControl, Stat, Breadcrumb)
+   - **Organisms**: Custom components (DashboardCard, StatGrid, NavHeader)
+   - **Templates**: Chakra layouts (Box, Flex, Grid, Container, Stack)
+   ```
+
+3. **State Management Integration** (new section)
+   ```markdown
+   ### Chakra UI Hooks Integration
+
+   Chakra provides built-in state management hooks:
+   - `useColorMode` / `useColorModeValue` - Theme switching
+   - `useTheme` - Access theme tokens
+   - `useDisclosure` - Modal/drawer state
+   - `useToast` - Toast notifications
+   - `useBreakpointValue` - Responsive values
+   ```
+
+### 10.3 Update dashboard-specifications.md (30 minutes)
+
+**File**: `docs/architecture/dashboard-specifications.md`
+
+**Changes**: Find/replace all Shadcn imports with Chakra UI equivalents
+
+**Pattern**:
+```tsx
+// FIND
+import { Card, CardHeader, CardContent } from "@/components/ui/card"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+
+// REPLACE WITH
+import { Card, CardHeader, CardBody, Tabs, TabList, Tab, TabPanels, TabPanel, Badge, Button } from '@chakra-ui/react'
+```
+
+**Sections to Update**:
+- Dashboard 1-8: All component specifications (lines 56-1200)
+- Component-to-Dashboard mapping table (update with Chakra components)
+- Note AG-UI usage for Dashboards 4, 6, 8 (complex tables)
+
+---
+
+## Phase 11: Update PRD Files with Chakra UI (3 hours)
+
+**Files**:
+- `docs/prd/epic-1-foundation-data-pipeline-infrastructure.md`
+- `docs/prd/epic-2-mvp-dashboard-suite-portal-launch.md`
+- `docs/prd/epic-3-complete-dashboard-suite-with-xpm-integration.md`
+- `docs/prd/epic-4-platform-refinement-advanced-features.md`
+- `docs/prd/technical-assumptions.md`
+
+### 11.1 Update Epic 1 (30 minutes)
+
+**File**: `docs/prd/epic-1-foundation-data-pipeline-infrastructure.md`
+
+**Changes**:
+- **Story 1.0 (Next.js Init)**: Update technical assumptions to reference Chakra UI
+- **Technical Constraints** section: Replace Shadcn with Chakra UI
+- **Dependencies** section: Update npm package requirements
+
+**Example Update**:
+```markdown
+# BEFORE
+**UI Framework**: Shadcn/ui v4 with Tailwind CSS
+
+# AFTER
+**UI Framework**: Chakra UI 2.8+ with Chakra UI Motion for animations
+**Data Grid**: AG-UI Enterprise (admin panel only)
+**Styling**: Chakra style props (no Tailwind dependency for components)
+```
+
+### 11.2 Update Epic 2 (1 hour)
+
+**File**: `docs/prd/epic-2-mvp-dashboard-suite-portal-launch.md`
+
+**Changes**:
+
+**Story 2.0: Initialize Next.js Portal**
+- Update component library setup instructions
+- Replace Shadcn installation steps with Chakra UI setup
+- Add Chakra Provider configuration steps
+
+**Story 2.1: Income vs Expenses Dashboard**
+- Update component specifications (Card, Tabs, Badge → Chakra equivalents)
+- Update acceptance criteria with Chakra component names
+
+**Story 2.2: Monthly Invoicing to Budget**
+- Update component references
+- Note: Keep Metabase embedding (unchanged)
+
+**Story 2.3: Debtors/AR Aging**
+- Update table component specification
+- Note: Use Chakra Table (simple) or AG-UI (if complex drill-down needed)
+
+### 11.3 Update Epic 3 (1 hour)
+
+**File**: `docs/prd/epic-3-complete-dashboard-suite-with-xpm-integration.md`
+
+**Changes**:
+
+**Story 3.1: YTD/MTD Budget Views**
+- Update component references to Chakra UI
+
+**Story 3.2: Work In Progress by Team**
+- **IMPORTANT**: Specify AG-UI for WIP table
+- Reason: Complex grouping, aging buckets, Excel export required
+
+**Story 3.3: ATO Lodgment Status**
+- Update gauge component specification (Chakra CircularProgress)
+
+**Story 3.4: Services Analysis**
+- **IMPORTANT**: Specify AG-UI for services table
+- Reason: Billability calculations, service type filtering
+
+**Story 3.5: Client Recoverability**
+- **IMPORTANT**: Specify AG-UI for recoverability table
+- Reason: Outstanding WIP calculations, client drill-down
+
+### 11.4 Update Epic 4 (30 minutes)
+
+**File**: `docs/prd/epic-4-platform-refinement-advanced-features.md`
+
+**Changes**:
+- **Performance Optimization**: Update with Chakra code-splitting patterns
+- **Accessibility Audit**: Note Chakra's built-in WCAG AA compliance
+- **Component Library Maturity**: Update from Shadcn to Chakra maintenance
+
+### 11.5 Update Technical Assumptions
+
+**File**: `docs/prd/technical-assumptions.md`
+
+**Add Section**:
+```markdown
+### UI Component Library
+
+**Assumption**: Chakra UI (Free/Open Source) provides sufficient component coverage for 95% of XeroPulse UI requirements.
+
+**Validation**:
+- ✅ All dashboard components available in Chakra UI
+- ✅ Form validation integrates with React Hook Form
+- ✅ Accessibility requirements met by default (WCAG 2.0 AA)
+- ✅ Animation system (Chakra UI Motion) meets micro-interaction requirements
+- ⚠️ Complex data grids require AG-UI Enterprise (separate license)
+
+**Risk**: AG-UI licensing cost may exceed budget. Mitigation: Use AG-UI only for 4 complex tables, use Chakra Table elsewhere.
+```
+
+---
+
+## Phase 12: Update Story Files with PO Agent (4 hours)
+
+**Process**: Use `/BMad:agents:po` to ensure product consistency
+
+**Files** (all in `docs/stories/`):
+- 1.0.nextjs-project-init.md
+- 1.7.income-expenses-dashboard.md
+- 1.8.supabase-auth.md
+- 1.9.nextjs-portal-embedding.md
+
+### 12.1 Story 1.0: Next.js Project Init (1 hour)
+
+**Changes**:
+1. **Task 2: Install UI Dependencies**
+   ```bash
+   # OLD
+   npx shadcn-ui@latest init
+
+   # NEW
+   npm install @chakra-ui/react @chakra-ui/next-js @emotion/react @emotion/styled framer-motion
+   npx @chakra-ui/cli init
+   ```
+
+2. **Task 3: Configure Component Library**
+   - Replace Shadcn config with Chakra theme setup
+   - Add Chakra Provider to root layout
+
+3. **Acceptance Criteria**:
+   - Update: "Chakra UI configured with XeroPulse custom theme"
+   - Add: "Chakra Provider wraps app with ColorModeScript"
+
+### 12.2 Story 1.7: Income vs Expenses Dashboard (1 hour)
+
+**Changes**:
+1. **Visual Components Section**:
+   ```markdown
+   # OLD
+   - Card component (shadcn)
+   - Tabs component (shadcn)
+   - Badge component (shadcn)
+
+   # NEW
+   - Card component (Chakra UI: Card, CardHeader, CardBody)
+   - Tabs component (Chakra UI: Tabs, TabList, Tab, TabPanels)
+   - Badge component (Chakra UI: Badge with colorScheme)
+   ```
+
+2. **Component Implementation Examples**:
+   - Replace all Shadcn imports with Chakra UI
+   - Update component props to Chakra API
+
+3. **Acceptance Criteria**:
+   - Update: "Dashboard uses Chakra UI components with XeroPulse theme"
+
+### 12.3 Story 1.8: Supabase Auth (1 hour)
+
+**Changes**:
+1. **Login Form Components**:
+   ```tsx
+   // OLD
+   import { Input } from "@/components/ui/input"
+   import { Button } from "@/components/ui/button"
+
+   // NEW
+   import { FormControl, FormLabel, Input, Button, VStack } from '@chakra-ui/react'
+   ```
+
+2. **Form Layout**:
+   - Replace Shadcn form patterns with Chakra FormControl
+   - Update validation error display with Chakra FormErrorMessage
+
+### 12.4 Story 1.9: Next.js Portal Embedding (1 hour)
+
+**Changes**:
+1. **Dashboard Shell Components**:
+   - Replace Shadcn layout components with Chakra Box, Flex, Grid
+   - Update navigation components to Chakra UI
+
+2. **Acceptance Criteria**:
+   - Update: "Dashboard shell uses Chakra UI layout components"
+
+---
+
+## Updated Success Criteria
+
+✅ All "Superset" references replaced with "Metabase" *(Phase 1 - Complete)*
+✅ All API versions corrected (Xero v2.0, XPM v3.1) *(Phase 1 - Complete)*
+✅ All 8 dashboards have detailed specifications in PRD *(Phases 2-3 - Complete)*
+✅ Dashboard 5 blocker clearly documented *(Phase 3 - Complete)*
+✅ **NEW**: All Shadcn/ui references replaced with Chakra UI *(Phases 9-12)*
+✅ **NEW**: Hybrid Chakra UI + AG-UI approach documented *(Phase 9)*
+✅ **NEW**: front-end-spec.md completely rewritten with Chakra UI *(Phase 10)*
+✅ **NEW**: All story files updated with Chakra UI components *(Phase 12)*
+✅ **NEW**: AI prompts updated with Chakra UI examples *(Phase 13 - TBD)*
+✅ **NEW**: Chakra UI MCP integration documented *(CLAUDE.md, README.md)*
+✅ Budget remains under $15/month (Chakra UI Free = $0) *(Validated)*
+
+---
+
+## Updated Timeline
+
+**Original Phases** (1-8): 15 hours
+**New Chakra UI Phases** (9-12): 13 hours
+
+- **Phase 9**: 2 hours (Chakra UI migration strategy)
+- **Phase 10**: 4 hours (Core technical docs)
+- **Phase 11**: 3 hours (PRD updates)
+- **Phase 12**: 4 hours (Story files with PO agent)
+
+**Total Estimated Time**: 28 hours (executable over 3-4 days incrementally)
+
+---
+
+## Updated Execution Strategy
+
+**Session 1** (Current):
+1. ✅ Phase 9: Update DOCUMENTATION-UPDATE-PLAN.md with Chakra UI phases
+2. Phase 2 + Phase 10.1: Update tech-stack.md
+3. Phase 6 + Phase 7: Update README.md and CLAUDE.md
+
+**Session 2**:
+4. Phase 10.2: Rewrite front-end-spec.md (largest update)
+5. Phase 10.3: Update frontend-architecture.md
+
+**Session 3**:
+6. Phase 10.4: Update dashboard-specifications.md
+7. Phase 11: Update PRD files (Epic 1-4)
+
+**Session 4**:
+8. Phase 12: Update story files with PO agent
+9. Phase 13: Update AI prompts (deferred)
+10. Phase 11: Update source-tree.md
+
+**Checkpoint after each phase**: Verify Chakra UI component mappings accurate, no broken references, budget constraints maintained.
+
+---
+
+**Status**: Phase 9 complete - Chakra UI migration strategy documented
+**Next Step**: Execute Phase 2 (tech-stack.md) + Phase 10.1 (begin core technical docs)

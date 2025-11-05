@@ -36,6 +36,7 @@ This document defines the user experience goals, information architecture, user 
 
 | Date | Version | Description | Author |
 |------|---------|-------------|--------|
+| 2025-10-25 | 2.0 | Updated UI/UX specification: Migrated from Shadcn/ui v4 to Chakra UI + AG-UI hybrid approach | Winston (Architect) + Sally (UX Expert) |
 | 2025-10-22 | 1.0 | Initial UI/UX specification aligned with Next.js + AG-UI + Shadcn v4 + Metabase architecture | Sally (UX Expert) |
 
 ---
@@ -460,18 +461,32 @@ All high-fidelity mockups, component specifications, and interactive prototypes 
 
 ### Design System Approach
 
-**Foundation:** Shadcn/ui v4 provides the accessible, customizable component foundation with headless architecture enabling complete design control while maintaining WCAG AA compliance out of the box.
+**Foundation:** Chakra UI (Free/Open Source) provides the accessible, production-ready component foundation with built-in WCAG 2.0 AA compliance, theme customization, and type-safe styling. Chakra UI Motion (integrated Framer Motion) handles all animations and micro-interactions.
 
-**Enterprise Enhancement:** AG-UI Enterprise components integrated for data-intensive interfaces requiring advanced grid functionality, sorting, filtering, and pagination.
+**Enterprise Enhancement:** AG-UI Enterprise components integrated for 4 complex data grids requiring advanced features (user management, WIP analysis, services analysis, client recoverability). This hybrid approach retains enterprise-grade table capabilities while maximizing developer experience for 95% of UI components.
 
-**Custom Extensions:** XeroPulse-specific components built on Shadcn primitives for dashboard cards, AI chat interface, and Metabase embedding.
+**Custom Extensions:** XeroPulse-specific components built on Chakra UI primitives for dashboard cards, AI chat interface, Metabase embedding, and role-based navigation.
 
 **Implementation Strategy:**
 - All components built with TypeScript for type safety
-- Tailwind CSS for styling with custom theme configuration
-- Framer Motion for animations and transitions
-- Lucide React for iconography with custom financial icons
-- React Hook Form + Zod for form validation
+- **Chakra UI Style Props** for component styling with responsive design tokens (no Tailwind dependency)
+- **Chakra UI Motion** for animations and transitions (integrated Framer Motion)
+- **Chakra Icons** + Lucide React for iconography with custom financial icons
+- React Hook Form + Zod for form validation (integrates with Chakra's FormControl)
+- **Chakra UI MCP Server** for component examples and accessibility patterns
+
+**Why Chakra UI?**
+1. ✅ **MCP Integration**: 30-40% faster development with instant component examples
+2. ✅ **Built-in Accessibility**: WCAG 2.0 AA compliant by default
+3. ✅ **Motion System**: Integrated animations (no separate setup)
+4. ✅ **Type-Safe Styling**: Style props with TypeScript autocomplete
+5. ✅ **Zero Cost**: Open-source, fits $15/month budget
+6. ✅ **Powerful Theming**: Design tokens, component variants, dark mode support
+
+**Hybrid Approach - Chakra UI + AG-UI:**
+- **Chakra UI (95%)**: Forms, layouts, navigation, modals, cards, buttons, feedback
+- **AG-UI (5%)**: User management table, WIP table, services table, recoverability table
+- **Integration**: Use Chakra theme tokens for AG-UI styling consistency
 
 ---
 
@@ -479,64 +494,178 @@ All high-fidelity mockups, component specifications, and interactive prototypes 
 
 #### Button
 
+**Chakra UI Component:** `<Button />` from `@chakra-ui/react`
+
 **Purpose:** Primary interaction element for triggering actions throughout the application
 
-**Variants:**
-- `primary`: Solid fill with primary color, used for primary actions (Login, Submit, Create)
-- `secondary`: Outline style with secondary color, used for secondary actions (Cancel, Back)
+**Variants** (using `variant` prop):
+- `solid`: Solid fill with primary color, used for primary actions (Login, Submit, Create) - **default**
+- `outline`: Outline style with secondary color, used for secondary actions (Cancel, Back)
 - `ghost`: Transparent background, used for tertiary actions (Close, Dismiss)
-- `destructive`: Red color scheme, used for dangerous actions (Delete, Deactivate)
 - `link`: Styled as hyperlink, used for navigation within text
 
-**States:**
-- Default, Hover, Active, Focus (keyboard), Disabled, Loading (spinner icon)
+**Color Schemes** (using `colorScheme` prop):
+- `brand`: Primary blue (#3B82F6) for main actions
+- `red`: Red scheme for dangerous actions (Delete, Deactivate)
+- `gray`: Gray scheme for neutral actions
+- `green`: Green scheme for success actions (Approve, Confirm)
+
+**States** (built-in Chakra):
+- Default, Hover, Active, Focus (keyboard), Disabled, Loading (spinner icon automatic)
+
+**Sizes** (using `size` prop):
+- `sm`: 32px height, compact for dense interfaces
+- `md`: 40px height (default), standard size
+- `lg`: 48px height, large touch targets for mobile
 
 **Usage Guidelines:**
-- Use `primary` sparingly for most important action per screen
-- Loading state shows spinner icon, prevents re-clicks
-- Disabled state includes tooltip explaining why action unavailable
-- Size variants: `sm` (32px), `md` (40px default), `lg` (48px for touch targets)
+- Use `colorScheme="brand"` sparingly for most important action per screen
+- Loading state: Use `isLoading` prop - shows spinner, prevents re-clicks automatically
+- Disabled state: Use `isDisabled` prop with Tooltip explaining why action unavailable
+- Icon support: Use `leftIcon` or `rightIcon` props with Chakra Icons
+
+**Example:**
+```tsx
+import { Button } from '@chakra-ui/react'
+
+// Primary action
+<Button colorScheme="brand" size="md">Login</Button>
+
+// Secondary action
+<Button variant="outline" colorScheme="gray">Cancel</Button>
+
+// Dangerous action with confirmation
+<Button colorScheme="red" leftIcon={<DeleteIcon />}>Delete User</Button>
+
+// Loading state
+<Button isLoading loadingText="Saving...">Save Changes</Button>
+```
 
 ---
 
 #### Input Fields
 
+**Chakra UI Components:** `<Input />`, `<Textarea />`, `<FormControl />`, `<FormLabel />`, `<FormErrorMessage />` from `@chakra-ui/react`
+
 **Purpose:** Text entry for forms, search, and data input with comprehensive validation feedback
 
-**Variants:**
+**Input Types** (using `type` prop):
 - `text`: Standard text input
 - `email`: Email-specific validation and keyboard
-- `password`: Masked input with show/hide toggle
-- `search`: Includes search icon, clear button, debounced onChange
-- `number`: Numeric input with increment/decrement buttons
-- `textarea`: Multi-line text with auto-expand option
+- `password`: Masked input (use `<InputGroup>` with `<InputRightElement>` for show/hide toggle)
+- `number`: Numeric input
+- `search`: Search input (use `<InputGroup>` with `<InputLeftElement>` for icon)
 
-**States:**
-- Default, Focus, Error (red border + error message), Success (green border + checkmark), Disabled
+**Textarea:** Use `<Textarea />` component for multi-line text with `resize` prop
+
+**States** (Chakra provides built-in visual feedback):
+- Default, Focus, Error (`isInvalid` prop), Disabled (`isDisabled` prop), Read-only (`isReadOnly` prop)
+
+**Sizes** (using `size` prop):
+- `sm`: 32px height, compact for dense forms
+- `md`: 40px height (default), standard size
+- `lg`: 48px height, better touch targets
 
 **Usage Guidelines:**
-- Always pair with Label component for accessibility
-- Error messages appear below field with animated slide-in
-- Success state reserved for critical fields (password confirmation)
-- Prefix/suffix icon support for context (currency symbol, search icon)
+- Always wrap with `<FormControl>` for accessibility
+- Use `<FormLabel>` for labels (automatically associates with input)
+- Use `<FormErrorMessage>` for validation errors (only shows when `isInvalid={true}`)
+- Use `<FormHelperText>` for additional context
+- Use `<InputGroup>` with `<InputLeftElement>` / `<InputRightElement>` for icons
+
+**Example:**
+```tsx
+import {
+  FormControl, FormLabel, FormErrorMessage, FormHelperText,
+  Input, InputGroup, InputLeftElement, InputRightElement
+} from '@chakra-ui/react'
+import { EmailIcon, ViewIcon, ViewOffIcon } from '@chakra-ui/icons'
+
+// Standard text input with validation
+<FormControl isInvalid={errors.email}>
+  <FormLabel>Email Address</FormLabel>
+  <InputGroup>
+    <InputLeftElement>
+      <EmailIcon color="gray.400" />
+    </InputLeftElement>
+    <Input type="email" placeholder="you@example.com" {...register('email')} />
+  </InputGroup>
+  <FormErrorMessage>{errors.email?.message}</FormErrorMessage>
+</FormControl>
+
+// Password input with show/hide toggle
+const [show, setShow] = useState(false)
+<FormControl>
+  <FormLabel>Password</FormLabel>
+  <InputGroup>
+    <Input type={show ? 'text' : 'password'} placeholder="Enter password" />
+    <InputRightElement>
+      <Button size="sm" onClick={() => setShow(!show)}>
+        {show ? <ViewOffIcon /> : <ViewIcon />}
+      </Button>
+    </InputRightElement>
+  </InputGroup>
+</FormControl>
+```
 
 ---
 
 #### Card
 
+**Chakra UI Components:** `<Card />`, `<CardHeader />`, `<CardBody />`, `<CardFooter />` from `@chakra-ui/react`
+
 **Purpose:** Container component for grouping related content, used extensively for dashboard previews and content sections
 
-**Variants:**
-- `default`: Standard card with subtle border and shadow
-- `elevated`: Increased shadow for hierarchy emphasis
-- `interactive`: Hover state with shadow transition, cursor pointer
-- `outlined`: Border-only variant for subtle containers
+**Variants** (using `variant` prop):
+- `elevated`: Standard card with shadow (default)
+- `outline`: Border-only variant for subtle containers
+- `filled`: Filled background variant
+- `unstyled`: No styling, for custom designs
+
+**Sizes** (using `size` prop):
+- `sm`: Compact padding
+- `md`: Standard padding (default)
+- `lg`: Large padding for emphasis
 
 **States:**
-- Default, Hover (if interactive), Selected (if selectable), Loading (skeleton)
+- Default, Hover (use Chakra UI Motion for interactive cards), Selected (custom styling), Loading (use `<Skeleton />` wrapper)
 
 **Usage Guidelines:**
-- Dashboard cards use `interactive` variant with hover lift effect
+- Dashboard cards use `variant="elevated"` with Chakra UI Motion for hover lift effect
+- Always use semantic structure: `<Card>` → `<CardHeader>` → `<CardBody>` → `<CardFooter>`
+- Use `<Heading>` in `<CardHeader>` for card titles
+- Interactive cards wrap in `<MotionBox>` for hover animations
+
+**Example:**
+```tsx
+import { Card, CardHeader, CardBody, CardFooter, Heading, Text, Button } from '@chakra-ui/react'
+import { MotionBox } from '@/components/ui/motion'
+
+// Standard dashboard card
+<Card variant="elevated">
+  <CardHeader>
+    <Heading size="md">Income vs Expenses</Heading>
+  </CardHeader>
+  <CardBody>
+    <Text>View your weekly cash flow analysis</Text>
+  </CardBody>
+  <CardFooter>
+    <Button colorScheme="brand">View Dashboard</Button>
+  </CardFooter>
+</Card>
+
+// Interactive card with hover animation
+<MotionBox whileHover={{ y: -4, shadow: "lg" }} transition={{ duration: 0.2 }}>
+  <Card variant="elevated" cursor="pointer">
+    <CardHeader>
+      <Heading size="sm">Dashboard Card</Heading>
+    </CardHeader>
+    <CardBody>
+      <Text>Hover to see lift effect</Text>
+    </CardBody>
+  </Card>
+</MotionBox>
+```
 - Card header includes title, optional subtitle, optional action menu
 - Card footer for metadata (last updated, data source indicator)
 - Loading skeleton maintains card dimensions to prevent layout shift
@@ -545,91 +674,271 @@ All high-fidelity mockups, component specifications, and interactive prototypes 
 
 #### Badge
 
+**Chakra UI Component:** `<Badge />` from `@chakra-ui/react`
+
 **Purpose:** Small status indicators for roles, statuses, and categorical labels
 
-**Variants:**
-- `role`: Color-coded badges for user roles (Executive: purple, Manager: blue, Staff: green, Admin: red)
-- `status`: System status indicators (Active: green, Inactive: gray, Error: red, Warning: amber)
-- `category`: Dashboard category tags (Financial: blue, Operational: teal, Executive: purple)
-- `notification`: Count badges for unread items (red with white text)
+**Variants** (using `variant` prop):
+- `solid`: Solid background with contrasting text (default)
+- `subtle`: Soft background with colored text
+- `outline`: Border with colored text
+
+**Color Schemes** (using `colorScheme` prop):
+- **Roles**: `purple` (Executive), `blue` (Manager), `green` (Staff), `red` (Admin)
+- **Status**: `green` (Active), `gray` (Inactive), `red` (Error), `yellow` (Warning)
+- **Category**: `blue` (Financial), `teal` (Operational), `purple` (Executive)
 
 **States:**
-- Static (most common), Removable (with X icon for filters)
+- Static (most common), Removable (wrap with `<Tag>` for close button)
 
 **Usage Guidelines:**
+- Use `colorScheme` prop for semantic color coding
 - Use sparingly to avoid visual clutter
 - Always pair color with icon or text for colorblind accessibility
-- Size variants: `sm` (16px height), `md` (20px default), `lg` (24px)
-- Interactive badges have hover state with darker background
+- Size variants: `sm`, `md` (default), `lg`
+- For removable badges, use `<Tag>` with `<TagCloseButton>` instead
+
+**Example:**
+```tsx
+import { Badge, Tag, TagLabel, TagCloseButton } from '@chakra-ui/react'
+
+// Role badge
+<Badge colorScheme="purple" variant="solid">Executive</Badge>
+
+// Status badge
+<Badge colorScheme="green" variant="subtle">Active</Badge>
+
+// Removable filter tag
+<Tag colorScheme="blue" variant="solid">
+  <TagLabel>Budget Dashboard</TagLabel>
+  <TagCloseButton onClick={removeFilter} />
+</Tag>
+```
 
 ---
 
-#### Data Table (AG-UI)
+#### Data Table (Hybrid: Chakra UI + AG-UI)
 
-**Purpose:** Enterprise-grade data grid for user management, activity logs, and data exports
+**Purpose:** Data tables optimized by complexity - simple tables use Chakra UI, complex grids use AG-UI Enterprise
 
-**Variants:**
-- `standard`: Basic table with sorting and pagination
-- `interactive`: Includes row selection, inline editing, bulk actions
-- `serverPaginated`: Optimized for large datasets with server-side operations
+**Chakra UI Table** (for simple tables <10 columns, no advanced features):
+- Use `<Table>`, `<Thead>`, `<Tbody>`, `<Tr>`, `<Th>`, `<Td>` from `@chakra-ui/react`
+- Best for: Dashboard lists, simple data display, read-only tables
+- Features: Basic sorting, responsive design, accessible markup
+- Styling: Variants include `simple`, `striped`, `unstyled`
 
-**Features:**
+**AG-UI Enterprise** (for 4 complex data grids only):
+1. **User Management Table** (Admin panel)
+2. **WIP Analysis Table** (Dashboard 4)
+3. **Services Analysis Table** (Dashboard 6)
+4. **Client Recoverability Table** (Dashboard 8)
+
+**AG-UI Features:**
 - Column sorting (single and multi-column)
 - Column filtering (text search, select dropdowns, date ranges)
 - Column visibility toggle
 - Row selection (single, multiple, all)
 - Inline editing with validation
 - Export to CSV/Excel
-- Responsive column stacking on mobile
+- Grouping and aggregation
+- Virtualization for large datasets
 
 **Usage Guidelines:**
-- Default page size: 50 rows with options for 25, 50, 100, 200
-- Skeleton loading for async data fetching
-- Empty state with illustration and call-to-action
-- Sticky header on scroll for context retention
+- **Decision Rule**: Use Chakra Table unless you need AG-UI's advanced features
+- AG-UI default page size: 50 rows with options for 25, 50, 100, 200
+- Wrap AG-UI in Chakra `<Box>` for consistent spacing and styling
+- Use Chakra theme tokens for AG-UI styling where possible
+- Skeleton loading for async data fetching (use Chakra `<Skeleton>`)
+- Empty state with Chakra `<EmptyState>` component
+
+**Example (Chakra Table):**
+```tsx
+import { Table, Thead, Tbody, Tr, Th, Td, TableContainer } from '@chakra-ui/react'
+
+<TableContainer>
+  <Table variant="striped" colorScheme="gray">
+    <Thead>
+      <Tr>
+        <Th>Dashboard</Th>
+        <Th>Last Viewed</Th>
+        <Th>Favorites</Th>
+      </Tr>
+    </Thead>
+    <Tbody>
+      <Tr>
+        <Td>Income vs Expenses</Td>
+        <Td>2 hours ago</Td>
+        <Td>⭐</Td>
+      </Tr>
+    </Tbody>
+  </Table>
+</TableContainer>
+```
+
+**Example (AG-UI with Chakra wrapper):**
+```tsx
+import { Box } from '@chakra-ui/react'
+import { AgGridReact } from 'ag-grid-react'
+
+<Box borderWidth="1px" borderRadius="lg" overflow="hidden">
+  <AgGridReact
+    rowData={users}
+    columnDefs={columnDefs}
+    // ... AG-UI props
+  />
+</Box>
+```
 
 ---
 
 #### Modal / Dialog
 
+**Chakra UI Components:** `<Modal />`, `<Drawer />`, `<AlertDialog />` from `@chakra-ui/react`
+
 **Purpose:** Focused task completion and important confirmations requiring user attention
 
-**Variants:**
-- `dialog`: Standard modal for forms and detailed content
-- `alert`: Important notifications requiring acknowledgment
-- `confirm`: Confirmation dialogs for destructive actions
-- `drawer`: Slide-out panel for context-specific actions
+**Component Types:**
+- **`<Modal>`**: Standard modal for forms and detailed content
+- **`<AlertDialog>`**: Important notifications requiring explicit action
+- **`<Drawer>`**: Slide-out panel for context-specific actions (navigation, filters)
 
-**States:**
-- Open (with backdrop), Closing (animated exit), Closed
+**Modal Sizes** (using `size` prop):
+- `sm`, `md`, `lg`, `xl`, `2xl`, `3xl`, `4xl`, `5xl`, `6xl`, `full`
+
+**States** (built-in Chakra):
+- Open (with backdrop), Closing (animated exit with Framer Motion), Closed
 
 **Usage Guidelines:**
-- Modals trap focus for keyboard accessibility
-- Escape key closes non-critical modals
-- Destructive actions require explicit confirmation (typing "DELETE" or re-entering item name)
+- Use `useDisclosure` hook for open/close state management
+- Modals trap focus automatically for keyboard accessibility
+- Escape key closes non-critical modals (built-in)
+- Destructive actions use `<AlertDialog>` with explicit confirmation
 - Maximum one modal layer deep; nested modals not allowed
-- Mobile: Full-screen modals on screens <768px
+- Mobile: Use `size="full"` or `<Drawer>` on screens <768px
+
+**Example (Modal):**
+```tsx
+import {
+  Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalFooter, ModalCloseButton,
+  Button, useDisclosure
+} from '@chakra-ui/react'
+
+function UserEditModal() {
+  const { isOpen, onOpen, onClose } = useDisclosure()
+
+  return (
+    <>
+      <Button onClick={onOpen}>Edit User</Button>
+      <Modal isOpen={isOpen} onClose={onClose} size="lg">
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Edit User</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            {/* Form content */}
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="ghost" mr={3} onClick={onClose}>Cancel</Button>
+            <Button colorScheme="brand">Save</Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+    </>
+  )
+}
+```
+
+**Example (AlertDialog for destructive actions):**
+```tsx
+import { AlertDialog, AlertDialogOverlay, AlertDialogContent, AlertDialogHeader, AlertDialogBody, AlertDialogFooter } from '@chakra-ui/react'
+
+<AlertDialog isOpen={isOpen} onClose={onClose}>
+  <AlertDialogOverlay>
+    <AlertDialogContent>
+      <AlertDialogHeader>Delete User</AlertDialogHeader>
+      <AlertDialogBody>
+        Are you sure? This action cannot be undone.
+      </AlertDialogBody>
+      <AlertDialogFooter>
+        <Button onClick={onClose}>Cancel</Button>
+        <Button colorScheme="red" ml={3}>Delete</Button>
+      </AlertDialogFooter>
+    </AlertDialogContent>
+  </AlertDialogOverlay>
+</AlertDialog>
+```
 
 ---
 
 #### Toast Notifications
 
+**Chakra UI Hook:** `useToast()` from `@chakra-ui/react`
+
 **Purpose:** Non-blocking feedback for actions, errors, and system notifications
 
-**Variants:**
+**Status Types** (using `status` prop):
 - `success`: Green with checkmark icon (User created, Data synced)
 - `error`: Red with X icon (Login failed, Connection error)
-- `warning`: Amber with alert icon (Session expiring soon)
+- `warning`: Orange with alert icon (Session expiring soon)
 - `info`: Blue with info icon (New feature available)
+- `loading`: Blue with spinner icon (Processing...)
 
-**States:**
-- Appearing (slide in from top-right), Visible (auto-dismiss after 5s), Dismissing (slide out)
+**States** (automatic animations):
+- Appearing (slide in with Framer Motion), Visible (auto-dismiss after 5s), Dismissing (slide out)
+
+**Positions** (using `position` prop):
+- `top`, `top-right`, `top-left`, `bottom`, `bottom-right`, `bottom-left`
+- Default: `top-right` on desktop, `top` on mobile
 
 **Usage Guidelines:**
-- Maximum 3 toasts visible simultaneously; queue additional
-- Critical errors remain until dismissed manually
-- Action toasts include "Undo" button for reversible operations
-- Position: Top-right on desktop, top-center on mobile
+- Use `useToast()` hook to programmatically show toasts
+- Maximum 3 toasts visible simultaneously; additional are queued automatically
+- Critical errors: Set `duration: null` to remain until dismissed manually
+- Action toasts: Use `description` prop with buttons for reversible operations
+- Variants: `solid` (default), `subtle`, `left-accent`, `top-accent`
+
+**Example:**
+```tsx
+import { useToast, Button } from '@chakra-ui/react'
+
+function SaveButton() {
+  const toast = useToast()
+
+  const handleSave = () => {
+    try {
+      // Save logic
+      toast({
+        title: 'Changes saved',
+        description: 'Your changes have been saved successfully.',
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+        position: 'top-right'
+      })
+    } catch (error) {
+      toast({
+        title: 'Error saving',
+        description: error.message,
+        status: 'error',
+        duration: null, // Stays until dismissed
+        isClosable: true
+      })
+    }
+  }
+
+  return <Button onClick={handleSave}>Save</Button>
+}
+
+// Toast with action (undo)
+toast({
+  title: 'User deleted',
+  description: 'The user has been removed.',
+  status: 'info',
+  duration: 8000,
+  isClosable: true,
+  action: <Button size="sm" onClick={handleUndo}>Undo</Button>
+})
+```
 
 ---
 
@@ -675,6 +984,110 @@ All high-fidelity mockups, component specifications, and interactive prototypes 
 - **Profit/Net**: `#6366F1` (Indigo-500) - Primary color for calculated metrics
 - **Budget**: `#8B5CF6` (Violet-500) - Purple for planned/forecasted values
 - **WIP**: `#F59E0B` (Amber-500) - Amber for work in progress
+
+---
+
+### Chakra UI Theme Configuration
+
+The XeroPulse color palette is implemented as a Chakra UI custom theme. This ensures consistent color usage across all components.
+
+**Theme File:** `src/theme/index.ts`
+
+```typescript
+import { extendTheme, type ThemeConfig } from '@chakra-ui/react'
+
+const config: ThemeConfig = {
+  initialColorMode: 'light',
+  useSystemColorMode: false,
+}
+
+const colors = {
+  brand: {
+    50: '#EEF2FF',   // Lightest indigo
+    100: '#E0E7FF',
+    200: '#C7D2FE',
+    300: '#A5B4FC',  // Primary Light
+    400: '#818CF8',
+    500: '#6366F1',  // Primary
+    600: '#4F46E5',  // Primary Hover
+    700: '#4338CA',
+    800: '#3730A3',
+    900: '#312E81',  // Darkest indigo
+  },
+  accent: {
+    success: '#10B981',  // Emerald-500 (Revenue)
+    error: '#EF4444',    // Red-500 (Expenses)
+    warning: '#F59E0B',  // Amber-500 (WIP)
+    violet: '#8B5CF6',   // Violet-500 (Budget)
+  },
+}
+
+const fonts = {
+  heading: `'Montserrat', sans-serif`,
+  body: `'Poppins', sans-serif`,
+  mono: `'JetBrains Mono', monospace`,
+}
+
+const components = {
+  Button: {
+    baseStyle: {
+      fontWeight: '500',
+      borderRadius: 'md',
+    },
+    variants: {
+      solid: {
+        bg: 'brand.500',
+        color: 'white',
+        _hover: { bg: 'brand.600' },
+      },
+    },
+  },
+  Card: {
+    baseStyle: {
+      container: {
+        borderRadius: 'lg',
+        overflow: 'hidden',
+      },
+    },
+  },
+  // ... other component customizations
+}
+
+export const theme = extendTheme({ config, colors, fonts, components })
+```
+
+**Usage in Components:**
+
+```tsx
+import { Box, Button, Text } from '@chakra-ui/react'
+
+// Using theme colors
+<Box bg="brand.50" borderColor="brand.500">
+  <Button colorScheme="brand">Primary Action</Button>
+  <Text color="accent.success">Revenue: $10,500</Text>
+  <Text color="accent.error">Expenses: $6,200</Text>
+</Box>
+```
+
+**Color Mode Support:**
+
+Chakra UI includes built-in light/dark mode support. Use `useColorMode` and `useColorModeValue` hooks:
+
+```tsx
+import { Box, useColorMode, useColorModeValue } from '@chakra-ui/react'
+
+function DashboardCard() {
+  const { colorMode, toggleColorMode } = useColorMode()
+  const bgColor = useColorModeValue('white', 'gray.800')
+  const textColor = useColorModeValue('gray.900', 'white')
+
+  return (
+    <Box bg={bgColor} color={textColor}>
+      {/* Card content */}
+    </Box>
+  )
+}
+```
 
 ---
 
@@ -742,23 +1155,34 @@ Primary icon set chosen for:
 
 ### Spacing & Layout
 
-**Grid System:** 12-column responsive grid with Tailwind CSS
+**Grid System:** Chakra UI responsive grid system with `<Grid />` and `<SimpleGrid />` components
 
-**Breakpoints:**
-- Mobile: `< 640px` (sm)
-- Tablet: `640px - 1024px` (md - lg)
-- Desktop: `1024px - 1536px` (lg - xl)
-- Wide: `>= 1536px` (2xl)
+**Breakpoints** (Chakra UI default breakpoints):
+- Base (Mobile): `< 30em` (`< 480px`)
+- `sm`: `30em` (`480px`) - Small mobile
+- `md`: `48em` (`768px`) - Tablet
+- `lg`: `62em` (`992px`) - Desktop
+- `xl`: `80em` (`1280px`) - Large desktop
+- `2xl`: `96em` (`1536px`) - Wide screens
 
-**Spacing Scale** (Tailwind defaults with custom extensions):
-- `2xs`: 2px (0.125rem) - Hairline borders
-- `xs`: 4px (0.25rem) - Tight spacing
-- `sm`: 8px (0.5rem) - Compact spacing
-- `md`: 16px (1rem) - Default component spacing
-- `lg`: 24px (1.5rem) - Section spacing
-- `xl`: 32px (2rem) - Major section breaks
-- `2xl`: 48px (3rem) - Page-level spacing
-- `3xl`: 64px (4rem) - Hero section spacing
+**Responsive Style Props:**
+```tsx
+// Chakra UI responsive prop syntax
+<Box
+  width={{ base: '100%', md: '50%', lg: '33.33%' }}
+  padding={{ base: 4, md: 6, lg: 8 }}
+/>
+```
+
+**Spacing Scale** (Chakra UI default spacing tokens - multiply by 4px):
+- `0.5`: 2px (0.125rem) - Hairline borders
+- `1`: 4px (0.25rem) - Tight spacing
+- `2`: 8px (0.5rem) - Compact spacing
+- `4`: 16px (1rem) - Default component spacing
+- `6`: 24px (1.5rem) - Section spacing
+- `8`: 32px (2rem) - Major section breaks
+- `12`: 48px (3rem) - Page-level spacing
+- `16`: 64px (4rem) - Hero section spacing
 
 **Layout Principles:**
 - Sidebar width: 280px (expanded), 72px (collapsed)
@@ -1104,7 +1528,7 @@ const pageVariants = {
 - Non-critical CSS loaded asynchronously
 - Fonts preloaded with `<link rel="preload">`
 - Icons tree-shaken from Lucide React library
-- Tailwind CSS purged of unused classes in production
+- Chakra UI components tree-shaken automatically (only used components bundled)
 
 #### Caching Strategy
 - Static assets (fonts, images): 1 year cache with content hashing
@@ -1271,7 +1695,7 @@ const pageVariants = {
 1. **Create Figma Design System** - Establish component library with all defined components
 2. **Generate Lottie Animation Assets** - Create the 6 core Lottie animations
 3. **Review Specification with Stakeholders** - Present to product owner and lead developer
-4. **Setup Development Environment** - Configure Next.js with Shadcn/ui, Tailwind CSS
+4. **Setup Development Environment** - Configure Next.js with Chakra UI, create custom theme
 5. **Accessibility Audit Prep** - Install automated testing tools
 6. **Metabase Configuration** - Create embed-ready dashboards with role-based filtering
 

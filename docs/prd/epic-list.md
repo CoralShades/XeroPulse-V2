@@ -10,7 +10,7 @@ Based on the comprehensive analysis of requirements and the unified Next.js + AG
 
 - Next.js 14+ App Router application setup with TypeScript
 - Supabase integration (auth, database, RLS policies)
-- AG-UI component library integration with Shadcn v4 base components
+- Chakra UI 2.8+ component library integration with AG-UI Enterprise for complex data grids
 - Role-based authentication system (Admin, Role A, Role B)
 - Basic dashboard shell with iframe embedding capability
 

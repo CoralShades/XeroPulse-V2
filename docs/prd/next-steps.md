@@ -27,7 +27,7 @@ The architecture provides detailed technical specifications across the following
 ### Key Architectural Decisions
 
 **Technology Stack Summary:**
-- **Frontend:** Next.js 14+ (App Router) + TypeScript 5.0+ + AG-UI Enterprise + Shadcn/ui v4
+- **Frontend:** Next.js 14+ (App Router) + TypeScript 5.0+ + Chakra UI 2.8+ + AG-UI Enterprise (4 tables only)
 - **Backend:** Next.js API Routes + tRPC 10+ for type-safe APIs
 - **Database:** Supabase PostgreSQL with Row Level Security (AU region)
 - **Cache:** Redis (Upstash) for session and query caching
@@ -54,7 +54,7 @@ With the architecture complete, development can now proceed with the following i
    - See [Epic 1: Foundation & Data Pipeline Infrastructure](./epic-1-foundation-data-pipeline-infrastructure.md)
    - Reference [Frontend Architecture](../architecture/frontend-architecture.md) and [Backend Architecture](../architecture/backend-architecture.md)
 
-2. **Architecture Validation** (Week 1): Validate AG-UI + Shadcn v4 integration approach through prototyping
+2. **Architecture Validation** (Week 1): Validate Chakra UI + AG-UI hybrid integration approach through prototyping
    - Reference [Components](../architecture/components.md) and [Tech Stack](../architecture/tech-stack.md)
 
 3. **n8n Environment Setup** (Week 2): Establish n8n development environment for Xero integration planning

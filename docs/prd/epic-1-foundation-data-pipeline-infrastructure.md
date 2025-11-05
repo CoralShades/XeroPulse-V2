@@ -153,7 +153,7 @@ Establish the technical foundation for XeroPulse by provisioning VPS infrastruct
 
 #### Acceptance Criteria
 
-1. Next.js 15 project initialized with App Router, Tailwind CSS, shadcn/ui components
+1. Next.js 14+ project initialized with App Router, Chakra UI 2.8+ components with MCP integration
 2. Login page implemented: Email/password form integrated with Supabase Auth client
 3. Protected dashboard route (`/dashboards/income-expenses`) requiring authentication (middleware checks session)
 4. Income vs Expenses dashboard embedded via iframe from Metabase URL

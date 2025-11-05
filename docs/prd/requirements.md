@@ -67,7 +67,7 @@
 
 **NFR12:** **CopilotKit Integration:** The system shall use self-hosted CopilotKit for conversational interface with fallback to custom chat implementation if functionality requirements are not met.
 
-**NFR13:** The system shall use AG-UI enterprise components for data-intensive interfaces with Shadcn v4 base components and MCP integration for consistent design system.
+**NFR13:** The system shall use Chakra UI 2.8+ (with MCP integration) for 95% of UI components and AG-UI Enterprise for complex data grids only (4 tables: user management, WIP analysis, services analysis, client recoverability).
 
 **NFR14:** The codebase shall use monorepo structure with version-controlled workflows, dashboard configurations, and infrastructure-as-code for reproducible deployments.
 

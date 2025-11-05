@@ -1,7 +1,7 @@
 # XeroPulse Dashboard Shell & Navigation - Component Prompt
 
 **Component:** Main Application Layout, Header, Sidebar Navigation
-**Dependencies:** Authentication system completed, shadcn/ui, lucide-react
+**Dependencies:** Authentication system completed, Chakra UI 2.8+, @chakra-ui/icons, lucide-react
 **Estimated Time:** 3-4 hours
 
 ---
@@ -84,13 +84,13 @@ export default function DashboardLayout({
 
 **User Menu (Dropdown):**
 - Trigger: User email + ChevronDown icon, white text, pr-6
-- Dropdown Menu (shadcn/ui DropdownMenu):
-  - User email (disabled item, text-sm, text-gray-500)
-  - Separator
+- Dropdown Menu (Chakra UI Menu component):
+  - User email (disabled MenuItem, fontSize="sm", color="gray.500")
+  - MenuDivider
   - "Admin Panel" link (only if user.role === 'executive' or 'admin')
-    - Icon: Settings from lucide-react
+    - Icon: Settings from lucide-react or @chakra-ui/icons
     - Links to: `/admin/users`
-  - Separator
+  - MenuDivider
   - "Logout" button
     - Icon: LogOut from lucide-react
     - Calls signOut() function, redirects to `/login`

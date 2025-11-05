@@ -14,7 +14,13 @@
       "Bash(npm install:*)",
       "Bash(npx shadcn@latest add:*)",
       "Bash(npx tsc:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "mcp__supabase__list_tables",
+      "mcp__supabase__list_extensions",
+      "mcp__supabase__list_migrations",
+      "mcp__supabase__execute_sql",
+      "Bash(if not exist \"docs\\qa\\gates\" mkdir \"docs\\qa\\gates\")",
+      "WebFetch(domain:developer.xero.com)"
     ],
     "deny": [],
     "ask": []

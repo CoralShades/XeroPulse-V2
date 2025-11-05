@@ -37,10 +37,11 @@ The project will use a monorepo structure with Next.js App Router, containing th
 
 - **Framework**: Next.js 14+ with App Router for modern React development patterns
 - **UI Components**:
-  - **Primary**: AG-UI enterprise components for data-intensive dashboard interfaces
-  - **Base**: Shadcn v4 components with MCP integration for consistent design system
-- **Styling**: Tailwind CSS with AG-UI's utility extensions and custom design tokens
-- **State Management**: React Server Components + client-side React Context for complex state
+  - **Primary**: Chakra UI 2.8+ with MCP integration for accessible, type-safe UI components (95% coverage)
+  - **Data Grids**: AG-UI Enterprise for complex tables only (4 tables: user management, WIP analysis, services analysis, client recoverability)
+- **Animation**: Chakra UI Motion (integrated Framer Motion) for transitions and micro-interactions
+- **Styling**: Chakra UI style props (type-safe, no Tailwind dependency) with custom theme configuration
+- **State Management**: React Server Components + Chakra UI hooks (useColorMode, useDisclosure, useToast) + React Context
 - **Type Safety**: TypeScript 5+ with strict configuration for enhanced developer experience
 
 ### Backend & Data Architecture

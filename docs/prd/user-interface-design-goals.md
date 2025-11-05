@@ -22,7 +22,7 @@ A modern, conversational-first business intelligence portal that combines tradit
 
 **Authentication Flow:**
 
-- Modern login/registration using Shadcn v4 components with Supabase Auth
+- Modern login/registration using Chakra UI components with Supabase Auth
 - Clean, branded authentication forms with proper validation states
 
 **Main Dashboard Portal:**
@@ -47,17 +47,19 @@ A modern, conversational-first business intelligence portal that combines tradit
 
 **Design System:**
 
-- **Base**: Shadcn v4 components with MCP integration for consistent, accessible UI patterns
-- **Data Visualization**: AG-UI components for dashboard grids, cards, and navigation elements
+- **Primary**: Chakra UI 2.8+ with MCP integration for WCAG 2.0 AA compliant, type-safe UI components (95% coverage)
+- **Data Grids**: AG-UI Enterprise for complex tables only (4 tables: user management, WIP, services, client recoverability)
+- **Animation**: Chakra UI Motion (integrated Framer Motion) for transitions and micro-interactions
 - **Conversational Interface**: CopilotKit React components for AI chat integration
-- **Responsive Framework**: Tailwind CSS with AG-UI's responsive utilities
+- **Styling**: Chakra UI style props (type-safe, responsive design tokens, no Tailwind dependency)
 
 **Component Strategy:**
 
-- Leverage Shadcn v4's improved accessibility and performance features
-- Use AG-UI's enterprise-grade components for data-heavy interfaces
+- Leverage Chakra UI's built-in WCAG 2.0 AA compliance and accessibility features
+- Use Chakra UI MCP server for instant component examples and best practices
+- Use AG-UI Enterprise only for complex data grids requiring advanced features (Excel export, inline editing, grouping)
 - Implement CopilotKit's self-hosted configuration for data privacy compliance
-- MCP integration for enhanced component interoperability
+- Chakra theme customization for XeroPulse brand consistency
 
 ### Accessibility: WCAG AA+ with Modern Standards
 

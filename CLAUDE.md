@@ -12,7 +12,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Tech Stack
 
-**Frontend**: Next.js 14+ (App Router), TypeScript 5.0+, AG-UI Enterprise + Shadcn/ui v4, Tailwind CSS 3.4+
+**Frontend**: Next.js 14+ (App Router), TypeScript 5.0+, Chakra UI + AG-UI Enterprise, Chakra UI Motion
 **Backend**: Next.js API Routes + tRPC 10+, TypeScript 5.0+
 **Database**: Supabase PostgreSQL (with Row Level Security)
 **Authentication**: Supabase Auth
@@ -204,6 +204,53 @@ npm run type-check      # TypeScript compiler check
 - Real-time financial data queries
 - Contact and client management
 - Refer to Xero MCP server documentation for full capabilities
+
+### Chakra UI MCP Server (Component Library & UI Development)
+
+**Status**: ✅ **AVAILABLE** - Use for all frontend component development
+
+**Available Tools:**
+- `mcp__chakra-ui__get_component_props` - Get component API reference with all available props
+- `mcp__chakra-ui__get_component_example` - Retrieve usage examples and code snippets
+- `mcp__chakra-ui__list_components` - List all available Chakra UI components
+- `mcp__chakra-ui__get_component_metadata` - Get component metadata and documentation
+- `mcp__chakra-ui__customize_theme` - Get theme customization guidance
+
+**When to Use:**
+- Getting component implementation examples before writing code
+- Checking component props and API surface
+- Finding accessibility patterns and best practices
+- Reviewing responsive design patterns
+- Understanding theme customization options
+
+**Example Workflow:**
+```bash
+# 1. List available components
+mcp__chakra-ui__list_components()
+
+# 2. Get Button component props
+mcp__chakra-ui__get_component_props(component="button")
+
+# 3. Get form field implementation example
+mcp__chakra-ui__get_component_example(component="input")
+
+# 4. Get theme customization help
+mcp__chakra-ui__customize_theme(category="colors")
+```
+
+**Component Coverage:**
+- ✅ Layout: Box, Flex, Grid, Stack, Container, Center, AspectRatio
+- ✅ Forms: Input, Textarea, Select, Checkbox, Radio, Switch, Slider
+- ✅ Data Display: Card, Badge, Avatar, Stat, Table, List
+- ✅ Feedback: Alert, Toast, Progress, Skeleton, Spinner
+- ✅ Overlay: Modal, Drawer, Popover, Tooltip, Menu
+- ✅ Navigation: Breadcrumb, Link, Tabs
+- ✅ Typography: Heading, Text
+- ✅ Media: Image, Icon
+
+**Hybrid Approach with AG-UI:**
+- Use Chakra UI for 95% of components (general UI, forms, layouts)
+- Use AG-UI Enterprise only for complex data grids (4 tables: user management, WIP analysis, services analysis, client recoverability)
 
 **Important**: Always use Archon task management instead of TodoWrite. See `docs/archon_ai.md` for complete workflow details.
 

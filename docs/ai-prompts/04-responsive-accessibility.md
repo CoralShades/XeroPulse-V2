@@ -14,17 +14,18 @@ Optimize XeroPulse for mobile devices (375px+) and ensure WCAG 2.1 Level AA acce
 
 ## RESPONSIVE DESIGN BREAKPOINTS
 
-**Tailwind CSS Breakpoints:**
-- `sm`: 640px (Small phones landscape)
-- `md`: 768px (Tablets portrait)
-- `lg`: 1024px (Tablets landscape, small laptops)
-- `xl`: 1280px (Desktops)
-- `2xl`: 1536px (Large desktops)
+**Chakra UI Breakpoints:**
+- `base`: 0px (Mobile first - default)
+- `sm`: 30em (480px - Small phones landscape)
+- `md`: 48em (768px - Tablets portrait)
+- `lg`: 62em (992px - Tablets landscape, small laptops)
+- `xl`: 80em (1280px - Desktops)
+- `2xl`: 96em (1536px - Large desktops)
 
 **XeroPulse Target Breakpoints:**
-- Mobile: < 768px (Single column, hamburger menu)
-- Tablet: 768px - 1023px (Collapsible sidebar)
-- Desktop: ≥ 1024px (Full layout with sidebar)
+- Mobile: `< md` (< 768px - Single column, hamburger menu)
+- Tablet: `md` to `lg` (768px - 991px - Collapsible sidebar)
+- Desktop: `≥ lg` (≥ 992px - Full layout with sidebar)
 
 ---
 

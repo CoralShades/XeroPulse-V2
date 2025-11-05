@@ -179,7 +179,7 @@ ORDER BY wip_accumulated DESC
 - Colors: Green (<30 days), Yellow (31-60), Orange (61-90), Red (90+)
 - Table Features: Sortable, paginated, exportable to CSV
 
-**Shadcn/ui Components Required** (for internal BI alternative)
+**Chakra UI Components Required** (for internal BI alternative)
 - ✅ `Table` - WIP client details table (sortable, expandable)
 - ✅ `Card` - Container for donut charts
 - ✅ `Tabs` - Overview / WIP by Team / Details navigation
@@ -297,10 +297,10 @@ WHERE organization_id = {{organization_id}}
 GROUP BY client_type
 ```
 
-**Shadcn/ui Components Required**:
+**Chakra UI Components Required**:
 - ✅ `Table` - Lodgment status table
 - ✅ `Badge` - Status indicators (Filed, Still To Do, Draft)
-- ✅ `Progress` - Radial progress (e.g., 71.34%)
+- ✅ `CircularProgress` - Radial progress (e.g., 71.34%)
 - ✅ `Select` - ATO Year dropdown
 
 ### Story 3.7: Build Services Analysis Dashboard (Dashboard 6)
@@ -421,7 +421,7 @@ CREATE TABLE service_type_mappings (
 - Export to CSV/Excel enabled
 - Filters: Service Type Multi-Select, Staff Multi-Select, Date Range
 
-**Shadcn/ui Components Required** (for internal BI alternative):
+**Chakra UI Components Required** (for internal BI alternative):
 - ✅ `Table` - Services performance table (sortable)
 - ✅ `MultiSelect` - Service and staff filters
 - ✅ `Button` - Export to Excel
@@ -527,7 +527,7 @@ ORDER BY wip DESC
 - Toggle between "by Client" and "by Staff" views
 - Total row displaying sum of all WIP
 
-**Shadcn/ui Components Required** (for internal BI alternative):
+**Chakra UI Components Required** (for internal BI alternative):
 - ✅ `Table` - Client recoverability table
 - ✅ `Tabs` - by Staff / by Client toggle
 - ✅ `Button` - Sort icons in table headers

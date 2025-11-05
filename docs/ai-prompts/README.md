@@ -580,8 +580,9 @@ console.log('Test this URL:', testUrl);
 ### External References
 - **Next.js 15 Docs:** https://nextjs.org/docs
 - **Supabase Auth Guide:** https://supabase.com/docs/guides/auth
-- **shadcn/ui Components:** https://ui.shadcn.com/
-- **Tailwind CSS:** https://tailwindcss.com/docs
+- **Chakra UI Components:** https://chakra-ui.com/docs/components
+- **Chakra UI MCP Server:** Available in Claude Code for instant component examples
+- **AG-UI Enterprise:** https://www.ag-grid.com/ (for complex data grids)
 - **WCAG 2.1 Guidelines:** https://www.w3.org/WAI/WCAG21/quickref/
 
 ### AI Tool Links

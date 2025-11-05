@@ -28,16 +28,26 @@ src/
 │   │   ├── auth/                 # Authentication endpoints
 │   │   ├── trpc/                 # tRPC handler
 │   │   └── webhooks/             # External webhook handlers
-│   ├── globals.css               # Global Tailwind styles
-│   ├── layout.tsx                # Root layout with providers
+│   ├── globals.css               # Global styles
+│   ├── layout.tsx                # Root layout with ChakraProvider
 │   └── page.tsx                  # Landing/redirect page
 ├── components/                   # Reusable UI components
-│   ├── ui/                       # shadcn/ui base components
-│   │   ├── button.tsx            # Button component variations
-│   │   ├── input.tsx             # Form input components
-│   │   ├── modal.tsx             # Dialog/modal components
-│   │   ├── table.tsx             # Data table components
-│   │   └── index.ts              # Component exports
+│   ├── chakra/                   # Chakra UI theme and providers
+│   │   ├── theme/                # Custom theme configuration
+│   │   │   ├── index.ts          # Main theme (extends Chakra)
+│   │   │   ├── colors.ts         # Brand color palette
+│   │   │   ├── components.ts     # Component style overrides
+│   │   │   └── foundations.ts    # Typography, spacing, etc.
+│   │   └── provider.tsx          # ChakraProvider wrapper
+│   ├── ui/                       # Custom Chakra UI components
+│   │   ├── motion.tsx            # Chakra UI Motion wrappers
+│   │   ├── data-table.tsx        # Chakra Table wrapper
+│   │   └── stat-card.tsx         # Custom stat card component
+│   ├── ag-grid/                  # AG-UI Enterprise components (4 tables)
+│   │   ├── user-grid.tsx         # User management table
+│   │   ├── wip-grid.tsx          # WIP analysis table
+│   │   ├── services-grid.tsx     # Services analysis table
+│   │   └── recovery-grid.tsx     # Client recoverability table
 │   ├── layout/                   # Layout-specific components
 │   │   ├── Header.tsx            # Top navigation bar
 │   │   ├── Sidebar.tsx           # Collapsible side navigation
@@ -69,8 +79,8 @@ src/
 │   ├── utils.ts                  # Utility functions (cn, etc.)
 │   └── validations.ts            # Zod schema definitions
 ├── styles/                       # Styling and theme configuration
-│   ├── globals.css               # Global styles and Tailwind imports
-│   └── components.css            # Component-specific styles
+│   ├── globals.css               # Global CSS resets
+│   └── fonts.css                 # Font loading (Google Fonts)
 └── types/                        # TypeScript type definitions
     ├── auth.ts                   # Authentication types
     ├── dashboard.ts              # Dashboard-related types
@@ -81,10 +91,10 @@ src/
 ### Component Architecture Patterns
 
 **Atomic Design Structure**
-- **Atoms**: Basic UI elements (Button, Input, Badge) from shadcn/ui
-- **Molecules**: Combined UI elements (SearchInput, UserMenu, RoleBadge)
+- **Atoms**: Basic UI elements (Button, Input, Badge) from Chakra UI
+- **Molecules**: Combined UI elements (FormControl groups, Stat cards, Menu compositions)
 - **Organisms**: Complex UI sections (Header, Sidebar, DashboardContainer)
-- **Templates**: Page layouts (AuthLayout, DashboardLayout)
+- **Templates**: Page layouts (AuthLayout with ChakraProvider, DashboardLayout)
 - **Pages**: Complete routes (LoginPage, DashboardPage, AdminPage)
 
 **Component Composition Pattern**
@@ -133,22 +143,59 @@ export function UserManagementPage() {
 }
 ```
 
-**Client State with React Context**
+**Client State with Chakra UI Hooks**
 ```tsx
-// Minimal client state for UI-only concerns
-interface UIState {
+// Leverage Chakra UI built-in state management hooks
+import { useColorMode, useDisclosure, useToast } from '@chakra-ui/react'
+
+export function DashboardHeader() {
+  // Color mode management (light/dark theme)
+  const { colorMode, toggleColorMode } = useColorMode()
+
+  // Modal state management
+  const { isOpen, onOpen, onClose } = useDisclosure()
+
+  // Toast notifications
+  const toast = useToast()
+
+  const handleSave = () => {
+    // Save logic
+    toast({
+      title: 'Changes saved',
+      status: 'success',
+      duration: 3000,
+    })
+  }
+
+  return (
+    <Box>
+      <IconButton
+        icon={colorMode === 'light' ? <MoonIcon /> : <SunIcon />}
+        onClick={toggleColorMode}
+        aria-label="Toggle theme"
+      />
+      <Button onClick={onOpen}>Open Settings</Button>
+      <Modal isOpen={isOpen} onClose={onClose}>
+        {/* Modal content */}
+      </Modal>
+    </Box>
+  )
+}
+```
+
+**Custom Context for Application State**
+```tsx
+// Minimal custom context for app-specific concerns
+interface AppState {
   sidebarCollapsed: boolean;
-  currentTheme: 'light' | 'dark';
-  activeModal: string | null;
+  activeFilters: Record<string, any>;
 }
 
-export const UIContext = createContext<{
-  state: UIState;
+export const AppContext = createContext<{
+  state: AppState;
   actions: {
     toggleSidebar: () => void;
-    setTheme: (theme: 'light' | 'dark') => void;
-    openModal: (modalId: string) => void;
-    closeModal: () => void;
+    setFilters: (filters: Record<string, any>) => void;
   };
 }>();
 ```
@@ -325,60 +372,108 @@ export function CreateUserForm() {
 
 ---
 
-## Shadcn/ui Component Library Inventory
+## Chakra UI Component Library Inventory
 
 ### Core Components (Required for MVP)
 
-Based on all 8 dashboards, the complete shadcn/ui component library needed:
+Based on all 8 dashboards, the complete Chakra UI component library needed:
 
 ```typescript
 // Layout & Navigation
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Separator } from "@/components/ui/separator"
+import {
+  Box, Flex, Grid, SimpleGrid, Container, Stack, HStack, VStack,
+  Card, CardHeader, CardBody, CardFooter,
+  Tabs, TabList, Tab, TabPanels, TabPanel,
+  Divider, Spacer
+} from '@chakra-ui/react'
 
 // Data Display
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import {
+  Table, Thead, Tbody, Tr, Th, Td, TableContainer,
+  Badge, Tag, TagLabel, TagCloseButton,
+  Avatar, AvatarBadge, AvatarGroup,
+  Stat, StatLabel, StatNumber, StatHelpText, StatArrow, StatGroup,
+  List, ListItem, ListIcon, OrderedList, UnorderedList
+} from '@chakra-ui/react'
 
 // Forms & Inputs
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Calendar } from "@/components/ui/calendar"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import {
+  Button, IconButton, ButtonGroup,
+  Input, InputGroup, InputLeftElement, InputRightElement, InputLeftAddon, InputRightAddon,
+  Textarea,
+  Select,
+  Checkbox, CheckboxGroup,
+  Radio, RadioGroup,
+  Switch,
+  Slider, SliderTrack, SliderFilledTrack, SliderThumb,
+  FormControl, FormLabel, FormErrorMessage, FormHelperText
+} from '@chakra-ui/react'
 
 // Feedback
-import { Progress } from "@/components/ui/progress"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Toast, ToastAction, ToastClose, ToastDescription, ToastProvider, ToastTitle, ToastViewport } from "@/components/ui/toast"
+import {
+  Progress, CircularProgress, CircularProgressLabel,
+  Spinner,
+  Skeleton, SkeletonCircle, SkeletonText,
+  Alert, AlertIcon, AlertTitle, AlertDescription,
+  useToast // Toast hook (not component)
+} from '@chakra-ui/react'
 
-// Utility
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { ScrollArea } from "@/components/ui/scroll-area"
+// Overlay
+import {
+  Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalFooter, ModalCloseButton,
+  Drawer, DrawerOverlay, DrawerContent, DrawerHeader, DrawerBody, DrawerFooter, DrawerCloseButton,
+  AlertDialog, AlertDialogOverlay, AlertDialogContent, AlertDialogHeader, AlertDialogBody, AlertDialogFooter,
+  Popover, PopoverTrigger, PopoverContent, PopoverHeader, PopoverBody, PopoverArrow, PopoverCloseButton,
+  Tooltip,
+  Menu, MenuButton, MenuList, MenuItem, MenuGroup, MenuDivider
+} from '@chakra-ui/react'
+
+// Typography
+import { Heading, Text, Code } from '@chakra-ui/react'
+
+// Media & Icons
+import { Image, Icon } from '@chakra-ui/react'
+import { ChakraProvider, ColorModeScript, useColorMode, useColorModeValue } from '@chakra-ui/react'
+
+// Utility Hooks
+import { useDisclosure, useBreakpointValue, useTheme } from '@chakra-ui/react'
 ```
 
-### Custom Components (Build on shadcn)
+### Chakra UI Motion (Animation)
 
 ```typescript
-// Custom chart wrapper (for internal BI alternative)
-import { ChartContainer, ChartTooltip, ChartLegend } from "@/components/ui/chart"
+// Chakra UI Motion components (integrated Framer Motion)
+import { motion } from 'framer-motion'
+import { Box, Flex } from '@chakra-ui/react'
 
-// Custom data table with sorting, filtering, pagination
-import { DataTable } from "@/components/ui/data-table"
+// Create motion components
+export const MotionBox = motion(Box)
+export const MotionFlex = motion(Flex)
 
-// Custom multi-select (extends Select)
-import { MultiSelect } from "@/components/ui/multi-select"
+// Usage example
+<MotionBox
+  initial={{ opacity: 0, y: -20 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ duration: 0.3 }}
+>
+  Dashboard content
+</MotionBox>
+```
 
-// Custom date range picker (extends Calendar)
-import { DateRangePicker } from "@/components/ui/date-range-picker"
+### Custom Components (Built on Chakra UI)
 
-// Custom radial progress (for Dashboard 5)
-import { RadialProgress } from "@/components/ui/radial-progress"
+```typescript
+// Custom data table wrapper (Chakra Table for simple tables)
+import { DataTable } from '@/components/ui/data-table'
+
+// Custom stat card (extends Chakra Stat)
+import { StatCard } from '@/components/ui/stat-card'
+
+// Custom date range picker (extends Chakra Calendar integration)
+import { DateRangePicker } from '@/components/ui/date-range-picker'
+
+// Custom radial progress (uses Chakra CircularProgress)
+import { RadialProgress } from '@/components/ui/radial-progress'
 
 // Custom stat card (KPI metrics)
 import { StatCard } from "@/components/ui/stat-card"
@@ -465,6 +560,7 @@ npm install @tremor/react
 - ⚠️ Less customizable than Recharts
 - ⚠️ Fewer chart types available
 - ⚠️ Newer library (less community resources)
+- ⚠️ Requires Tailwind CSS (adds dependency alongside Chakra UI)
 
 **Best For**: KPI cards, simple charts, donut charts
 
@@ -515,7 +611,7 @@ npm install ag-grid-react ag-grid-enterprise
 - Dashboard 4 and 6 require advanced table features
 - Export to Excel is critical feature
 
-Otherwise, use shadcn Table + DataTable custom component
+Otherwise, use Chakra Table + custom DataTable component
 
 ### Recommendation Matrix
 
@@ -523,14 +619,14 @@ Otherwise, use shadcn Table + DataTable custom component
 |----------|-------------------|-----------|
 | **Charts (All Dashboards)** | Recharts | Free, flexible, comprehensive chart types |
 | **KPI Cards & Simple Charts** | Tremor | Better DX, beautiful defaults |
-| **Basic Tables** | shadcn Table | Sufficient for most use cases, free |
+| **Basic Tables** | Chakra Table | Sufficient for most use cases, free |
 | **Advanced Tables** | AG Grid Enterprise | Only if budget allows, Dashboard 4/6 benefit most |
 | **Donut Charts** | Tremor | Simpler API, better visuals |
 
 **Final Recommendation**:
 - Use **Recharts** for charts (free, flexible)
 - Use **Tremor** for KPI cards and donut charts (better DX)
-- Use **shadcn Table** for basic tables
+- Use **Chakra Table** for basic tables
 - Upgrade to **AG Grid Enterprise** later if budget allows (Dashboard 4, 6 would benefit)
 
 ---
@@ -559,7 +655,7 @@ Otherwise, use shadcn Table + DataTable custom component
 - Minimal frontend code (iframe embedding)
 - Focus on Metabase dashboard configuration
 
-### Option B: Internal BI with Shadcn + React Charts
+### Option B: Internal BI with Chakra UI + React Charts
 
 **Pros**:
 - ✅ Full design control and brand alignment

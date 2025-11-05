@@ -70,7 +70,7 @@ Transform your Xero accounting data into actionable insights with role-based das
 | **ETL Pipeline** | [n8n](https://n8n.io/) (self-hosted) | Xero API integration, scheduled workflows | $0 |
 | **Database & Auth** | [Supabase](https://supabase.com/) (free tier) | PostgreSQL database, user authentication | $0 |
 | **Dashboard Engine** | [Metabase](https://metabase.com/) | Business intelligence, data visualization | $0 |
-| **Web Portal** | [Next.js 14](https://nextjs.org/) (Vercel free tier) | User interface, dashboard embedding | $0 |
+| **Web Portal** | [Next.js 14](https://nextjs.org/) + [Chakra UI](https://chakra-ui.com/) | User interface, component system, dashboard embedding | $0 |
 | **Hosting** | Hetzner Cloud / DigitalOcean VPS | n8n + Metabase deployment | $10-20/month |
 | **SSL/CDN** | Let's Encrypt + Cloudflare | HTTPS certificates, DNS | $0 |
 

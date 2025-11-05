@@ -124,9 +124,9 @@ FROM weekly_wages
 ORDER BY week_ending
 ```
 
-### Shadcn Components
+### Chakra UI Components
 
-- `Card`, `Tabs`, `Select`, `Badge`, `Separator`
+- `Card`, `Tabs`, `Select`, `Badge`, `Divider`
 
 ### ETL Requirements
 
@@ -206,7 +206,7 @@ ORDER BY a.month
 - X-Axis: `month_label`
 - Y-Axis Multi-Series: `actual` (Orange #FB923C), `budget` (Blue #3B82F6)
 
-### Shadcn Components
+### Chakra UI Components
 
 - `Card`, `Select`, `Tooltip`
 
@@ -261,7 +261,7 @@ WHERE organization_id = {{organization_id}}
 
 **YTD Query**: Similar to MTD but with year-to-date range
 
-### Shadcn Components
+### Chakra UI Components
 
 - `Card`, `Tabs`, `Progress`, `Badge`
 
@@ -366,9 +366,10 @@ WHERE j.status = 'in_progress'
 GROUP BY pd.organization_id, s.team_name, c.client_name, j.job_number, j.id, j.start_date;
 ```
 
-### Shadcn Components
+### Chakra UI Components
 
-- `Table`, `Card`, `Tabs`, `Select`, `Badge`, `Calendar`, `Popover`, `Button`
+- `Table`, `Card`, `Tabs`, `Select`, `Badge`, `Popover`, `Button`
+- **Custom/Third-party**: Date picker (react-datepicker or chakra-dayzed-datepicker)
 
 ### ETL Requirements
 
@@ -428,7 +429,7 @@ WHERE organization_id = {{organization_id}}
   AND ato_year = {{ato_year}}
 ```
 
-### Shadcn Components
+### Chakra UI Components
 
 - `Table`, `Badge`, `Progress`, `Select`
 
@@ -533,9 +534,10 @@ CREATE TABLE service_type_mappings (
 );
 ```
 
-### Shadcn Components
+### Chakra UI Components
 
-- `Table`, `Card`, `Button`, `Calendar`, `Popover`, `Badge`, `MultiSelect`
+- `Table`, `Card`, `Button`, `Popover`, `Badge`
+- **Custom/Third-party**: Date picker (react-datepicker), Multi-select (chakra-react-select)
 
 ### ETL Requirements
 
@@ -648,7 +650,7 @@ JOIN monthly_sales s ON ar.month = s.month
 ORDER BY ar.month
 ```
 
-### Shadcn Components
+### Chakra UI Components
 
 - `Card`, `Badge`, `Select`, `Tooltip`
 
@@ -739,7 +741,7 @@ HAVING (SUM(t.charge_value) + SUM(co.amount) - SUM(i.amount)) > 0
 ORDER BY wip DESC
 ```
 
-### Shadcn Components
+### Chakra UI Components
 
 - `Table`, `Card`, `Tabs`, `Button`, `Select`
 
@@ -811,4 +813,4 @@ ORDER BY wip DESC
 1. Validate Suntax API availability (Dashboard 5)
 2. Implement Metabase dashboards (Epic 2)
 3. Create materialized views (`vw_wip_aging`, `ar_snapshots`)
-4. Build custom shadcn components (DataTable, MultiSelect, RadialProgress)
+4. Build custom Chakra UI components (DataTable, MultiSelect, RadialProgress)

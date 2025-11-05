@@ -14,8 +14,9 @@ XeroPulse is a professional financial intelligence platform that delivers automa
 
 ### Full Technology Stack
 - **Framework:** Next.js 15 (App Router, React 19, Server Components)
-- **Styling:** Tailwind CSS (utility-first)
-- **Component Library:** shadcn/ui (accessible, composable components)
+- **Styling:** Chakra UI 2.8+ (type-safe style props, built-in WCAG 2.0 AA compliance)
+- **Component Library:** Chakra UI (95% coverage) + AG-UI Enterprise (4 complex data grids only)
+- **Animation:** Chakra UI Motion (integrated Framer Motion)
 - **Authentication:** Supabase Auth (email/password, JWT tokens, session management)
 - **Deployment:** Vercel (serverless, edge functions)
 - **TypeScript:** Strictly typed (TSX files, interfaces for all data structures)
@@ -37,9 +38,10 @@ XeroPulse is a professional financial intelligence platform that delivers automa
 - Code/Data: JetBrains Mono (for technical displays if needed)
 
 **Spacing & Layout:**
-- Use Tailwind spacing scale (4px increments: space-4 = 16px, space-6 = 24px)
+- Use Chakra UI spacing scale (4px increments: spacing={4} = 16px, spacing={6} = 24px)
 - Ample whitespace for professional feel
 - 8px grid system for alignment
+- Responsive spacing props: `{{ base: 4, md: 6, lg: 8 }}`
 
 **Accessibility:** WCAG 2.1 Level AA compliance
 - 4.5:1 contrast ratio for text
@@ -69,43 +71,73 @@ The portal should feel like a **professional financial intelligence platform** w
 
 1. **Initialize Next.js 15 project** with TypeScript and App Router:
    ```bash
-   npx create-next-app@latest xeropulse-portal --typescript --tailwind --app
+   npx create-next-app@latest xeropulse-portal --typescript --app
    ```
 
-2. **Install required dependencies**:
+2. **Install Chakra UI and required dependencies**:
    ```bash
    npm install @supabase/supabase-js @supabase/auth-helpers-nextjs
-   npm install lucide-react class-variance-authority clsx tailwind-merge
-   npx shadcn-ui@latest init
+   npm install @chakra-ui/react @chakra-ui/icons @emotion/react @emotion/styled framer-motion
+   npm install lucide-react date-fns zustand
    ```
 
-3. **Install shadcn/ui components** (you'll need these):
-   ```bash
-   npx shadcn-ui@latest add button
-   npx shadcn-ui@latest add input
-   npx shadcn-ui@latest add label
-   npx shadcn-ui@latest add card
-   npx shadcn-ui@latest add dialog
-   npx shadcn-ui@latest add table
-   npx shadcn-ui@latest add dropdown-menu
-   npx shadcn-ui@latest add toast
-   npx shadcn-ui@latest add skeleton
-   ```
-
-4. **Configure Tailwind CSS** in `tailwind.config.ts` with custom colors:
+3. **Create Chakra UI theme configuration** in `components/chakra/theme/index.ts`:
    ```typescript
-   colors: {
-     primary: {
-       DEFAULT: '#1E3A8A',
-       50: '#EFF6FF',
-       900: '#1E3A8A',
+   import { extendTheme, type ThemeConfig } from '@chakra-ui/react'
+
+   const config: ThemeConfig = {
+     initialColorMode: 'light',
+     useSystemColorMode: false,
+   }
+
+   const colors = {
+     brand: {
+       50: '#EEF2FF',
+       500: '#6366F1',  // Primary blue
+       600: '#4F46E5',  // Primary hover
+       900: '#312E81',
      },
-     secondary: {
-       DEFAULT: '#64748B',
-       50: '#F8FAFC',
-       900: '#0F172A',
+     accent: {
+       success: '#10B981',
+       error: '#EF4444',
+       warning: '#F59E0B',
+       violet: '#8B5CF6',
      },
-     accent: '#14B8A6',
+   }
+
+   const fonts = {
+     heading: `'Montserrat', sans-serif`,
+     body: `'Poppins', sans-serif`,
+     mono: `'JetBrains Mono', monospace`,
+   }
+
+   export const theme = extendTheme({ config, colors, fonts })
+   ```
+
+4. **Create ChakraProvider wrapper** in `components/chakra/provider.tsx`:
+   ```typescript
+   'use client'
+
+   import { ChakraProvider } from '@chakra-ui/react'
+   import { theme } from './theme'
+
+   export function Providers({ children }: { children: React.ReactNode }) {
+     return <ChakraProvider theme={theme}>{children}</ChakraProvider>
+   }
+   ```
+
+   Then wrap your app in `app/layout.tsx`:
+   ```typescript
+   import { Providers } from '@/components/chakra/provider'
+
+   export default function RootLayout({ children }: { children: React.ReactNode }) {
+     return (
+       <html lang="en">
+         <body>
+           <Providers>{children}</Providers>
+         </body>
+       </html>
+     )
    }
    ```
 
@@ -246,10 +278,10 @@ The portal should feel like a **professional financial intelligence platform** w
     - If unauthorized, show 403 page
 
 18. **Build User Management Table**:
-    - shadcn/ui Table component
+    - Use AG-UI Enterprise for complex table with inline editing, sorting, filtering
     - **Columns:**
-      - Email (text-sm, font-medium)
-      - Role (badge component: Executive=blue, Manager=green, Staff=gray)
+      - Email (fontSize="sm", fontWeight="medium")
+      - Role (Chakra Badge component: Executive=blue, Manager=green, Staff=gray)
       - Last Login (formatted date: "Oct 15, 2025, 3:45 PM" or "Never")
       - Created Date (formatted date)
       - Actions (Edit button, Delete button)
@@ -259,45 +291,49 @@ The portal should feel like a **professional financial intelligence platform** w
       - Role filter dropdown: "All Roles", "Executive", "Manager", "Staff"
     - **Empty state:** If no users, show "No users found" message
 
-19. **Build Add User Modal** (shadcn/ui Dialog component):
+19. **Build Add User Modal** (Chakra UI Modal component):
     - **Trigger:** "Add User" button
     - **Modal content:**
-      - Title: "Add New User"
-      - Email input field (required, email validation)
-      - Role dropdown (Executive, Manager, Staff)
-      - Checkbox: "Send invitation email" (checked by default)
-      - **Actions:**
-        - "Cancel" button (secondary, closes modal)
-        - "Create User" button (primary, submits form)
+      - ModalHeader: "Add New User"
+      - ModalBody:
+        - Email input (FormControl with FormLabel, required, email validation)
+        - Role Select dropdown (Executive, Manager, Staff)
+        - Checkbox: "Send invitation email" (checked by default)
+      - ModalFooter:
+        - "Cancel" button (variant="ghost", closes modal)
+        - "Create User" button (colorScheme="brand", submits form)
     - **Logic:**
       - Calls Supabase Auth `admin.createUser()` API
       - Generates temporary password (auto-generated, sent via email)
       - Inserts user into `users` table with role
-      - Shows success toast: "User created successfully"
+      - Shows success toast: "User created successfully" (useToast hook)
       - Refreshes user table
 
-20. **Build Edit User Modal**:
+20. **Build Edit User Modal** (Chakra UI Modal component):
     - Similar to Add User, but:
-      - Title: "Edit User"
-      - Email field (disabled, shows existing email)
-      - Role dropdown (pre-selected with current role)
-      - "Save Changes" button
+      - ModalHeader: "Edit User"
+      - ModalBody:
+        - Email input (isDisabled={true}, shows existing email)
+        - Role Select dropdown (defaultValue set to current role)
+      - ModalFooter:
+        - "Cancel" button (variant="ghost")
+        - "Save Changes" button (colorScheme="brand")
     - **Logic:**
       - Updates user role in `users` table
-      - Shows success toast: "User updated successfully"
+      - Shows success toast: "User updated successfully" (useToast hook)
 
-21. **Build Delete User Confirmation Dialog**:
+21. **Build Delete User Confirmation Dialog** (Chakra UI AlertDialog component):
     - **Trigger:** Delete button in table row
-    - **Dialog content:**
-      - Title: "Delete User"
-      - Message: "Are you sure you want to delete [email]? This action cannot be undone."
-      - **Actions:**
-        - "Cancel" (secondary)
-        - "Delete" (destructive red button)
+    - **AlertDialog content:**
+      - AlertDialogHeader: "Delete User"
+      - AlertDialogBody: "Are you sure you want to delete [email]? This action cannot be undone."
+      - AlertDialogFooter:
+        - "Cancel" button (ref={cancelRef}, ml={3})
+        - "Delete" button (colorScheme="red", destructive action)
     - **Logic:**
       - Calls Supabase Auth `admin.deleteUser()` API
       - Deletes user from `users` table
-      - Shows success toast: "User deleted successfully"
+      - Shows success toast: "User deleted successfully" (useToast hook)
 
 22. **Add Bulk User Import** (optional enhancement):
     - "Import CSV" button next to "Add User"
@@ -330,7 +366,7 @@ The portal should feel like a **professional financial intelligence platform** w
 
 26. **Add loading states** at `/app/(dashboard)/dashboards/[dashboardId]/loading.tsx`:
     - Skeleton loader for dashboard page
-    - Shimmer animation (use shadcn/ui Skeleton component)
+    - Shimmer animation (use Chakra UI Skeleton component with isLoaded prop)
     - Matches dashboard layout (title skeleton, timestamp skeleton, large rectangle for iframe)
 
 ### PHASE 6: Responsive Design & Mobile Optimization
@@ -377,7 +413,7 @@ The portal should feel like a **professional financial intelligence platform** w
 
 34. **Optimize bundle size**:
     - Dynamic imports for admin panel (code-split: `const AdminPanel = dynamic(() => import('@/components/AdminPanel'))`)
-    - Tree-shake unused shadcn/ui components
+    - Tree-shake unused Chakra UI components (use selective imports where possible)
     - Minimize lucide-react icon imports (import only used icons)
 
 35. **Add loading performance monitoring**:
@@ -501,9 +537,9 @@ export function DashboardEmbed({ dashboardId, accessToken }: DashboardEmbedProps
 ❌ **DO NOT** skip role-based access checks - every protected route must validate user.role
 ❌ **DO NOT** use client-side only routing for protected pages - use Next.js middleware for server-side auth checks
 ❌ **DO NOT** exceed 500ms time-to-interactive for portal shell (excluding dashboard iframe load)
-❌ **DO NOT** use external UI component libraries other than shadcn/ui (consistency requirement)
+❌ **DO NOT** use external UI component libraries other than Chakra UI and AG-UI Enterprise (consistency requirement)
 ❌ **DO NOT** create a separate registration page - user creation happens only via Admin Panel
-❌ **DO NOT** use inline styles - all styling via Tailwind CSS utility classes
+❌ **DO NOT** use inline styles - all styling via Chakra UI style props
 
 ---
 
@@ -533,7 +569,8 @@ export function DashboardEmbed({ dashboardId, accessToken }: DashboardEmbedProps
 ✅ `/lib/dashboard-config.ts` - Dashboard permission mappings
 ✅ `/middleware.ts` - Authentication middleware
 ✅ `/types/index.ts` - TypeScript interfaces
-✅ `tailwind.config.ts` - Tailwind configuration with custom colors
+✅ `/components/chakra/theme/index.ts` - Chakra UI theme configuration with custom colors
+✅ `/components/chakra/provider.tsx` - ChakraProvider wrapper component
 ✅ `.env.local.example` - Environment variable template
 
 ### Files You MUST NOT Modify:
@@ -561,7 +598,7 @@ export function DashboardEmbed({ dashboardId, accessToken }: DashboardEmbedProps
 ### Mobile-First Approach
 - Start with mobile layout (375px width), then progressively enhance for tablet (768px) and desktop (1920px)
 - Test all interactions on touch devices (tap targets minimum 44x44px)
-- Use responsive Tailwind classes: `sm:`, `md:`, `lg:`, `xl:` breakpoints
+- Use responsive Chakra UI props: `{{ base: ..., sm: ..., md: ..., lg: ..., xl: ... }}` breakpoints
 
 ### Performance Targets
 - Portal shell (header + sidebar + empty content area): <500ms time-to-interactive
@@ -609,12 +646,12 @@ export function DashboardEmbed({ dashboardId, accessToken }: DashboardEmbedProps
 3. **Dashboard Routes:** Dynamic routes embedding Superset iframes with permission checks
 4. **User Management:** Admin panel for creating, editing, deleting users with role assignment
 5. **Error Handling:** 404, 403, loading states, error boundaries
-6. **Responsive Design:** Mobile-first, tablet, desktop breakpoints using Tailwind CSS
+6. **Responsive Design:** Mobile-first, tablet, desktop breakpoints using Chakra UI responsive props
 7. **Accessibility:** WCAG AA compliance, keyboard navigation, ARIA labels
 
 **TECH STACK:**
 - Next.js 15 (App Router, React 19, Server Components, TypeScript)
-- Tailwind CSS + shadcn/ui components
+- Chakra UI 2.8+ (95% coverage) + AG-UI Enterprise (4 complex data grids)
 - Supabase (Auth, PostgreSQL database for user roles)
 - Vercel deployment
 

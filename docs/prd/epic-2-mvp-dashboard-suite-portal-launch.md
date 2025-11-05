@@ -82,7 +82,7 @@ ORDER BY a.month
   - budget (Blue #3B82F6)
 - Filters: Financial Year selector (FY24, FY25, FY26)
 
-**Shadcn/ui Components Required** (for internal BI alternative)
+**Chakra UI Components Required** (for internal BI alternative)
 - ✅ `Card` - Chart container
 - ✅ `Select` - Financial year selector
 - ✅ `Tooltip` - Hover data display
@@ -198,7 +198,7 @@ ORDER BY ar.month
 - Horizontal Bar Chart: Top 15 debtors by outstanding balance
 - Line Chart: Y-Axis = DSO (days), X-Axis = Month
 
-**Shadcn/ui Components Required** (for internal BI alternative)
+**Chakra UI Components Required** (for internal BI alternative)
 - ✅ `Card` - Chart containers and KPI cards
 - ✅ `Badge` - Aging bucket indicators
 - ✅ `Select` - Client filter dropdown
